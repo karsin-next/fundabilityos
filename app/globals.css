@@ -1,26 +1,589 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400&display=swap');
 @import "tailwindcss";
 
+/* ============================================================
+   FUNDABILITYOS DESIGN SYSTEM — NextBlaze.Asia Exact Tokens
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --navy:        #022F42;
+  --yellow:      #FFD800;
+  --off-white:   #F8F9FA;
+  --white:       #FFFFFF;
+  --yellow-20:   rgba(255, 216, 0, 0.20);
+  --yellow-10:   rgba(255, 216, 0, 0.10);
+  --navy-80:     rgba(2, 47, 66, 0.80);
+  --navy-95:     rgba(2, 47, 66, 0.95);
+  --red:         #EF4444;
+  --amber:       #F59E0B;
+  --green:       #10B981;
+
+  /* Typography */
+  --font-sans: 'Montserrat', sans-serif;
+
+  /* Spacing */
+  --section-py: clamp(4rem, 8vw, 7rem);
+  --container-px: clamp(1.25rem, 5vw, 4rem);
+  --max-width: 1280px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================================
+   BASE RESET
+   ============================================================ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--white);
+  background-color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--container-px);
+}
+
+.section-dark {
+  background-color: var(--navy);
+  padding-block: var(--section-py);
+}
+
+.section-light {
+  background-color: var(--off-white);
+  color: var(--navy);
+  padding-block: var(--section-py);
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+
+.heading-hero {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.heading-section {
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.heading-card {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.label-mono {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.label-metric {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+/* ============================================================
+   TAG BADGE — yellow small-caps like NextBlaze
+   ============================================================ */
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--yellow);
+  color: var(--navy);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2px;
+}
+
+.tag-badge-ghost {
+  background: transparent;
+  border: 1px solid var(--yellow-20);
+  color: var(--yellow);
+}
+
+/* ============================================================
+   YELLOW ACCENT LINE — 3px bar under section headings
+   ============================================================ */
+
+.yellow-bar {
+  display: block;
+  width: 3rem;
+  height: 3px;
+  background-color: var(--yellow);
+  margin-block: 1rem;
+}
+
+.yellow-bar-full {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: var(--yellow-20);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.875rem 2rem;
+  border-radius: 2px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Primary — solid yellow, navy text */
+.btn-primary {
+  background-color: var(--yellow);
+  color: var(--navy);
+  border-color: var(--yellow);
+}
+.btn-primary:hover {
+  background-color: transparent;
+  color: var(--yellow);
+}
+
+/* Ghost — yellow border, transparent */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--yellow);
+  border-color: var(--yellow);
+}
+.btn-ghost:hover {
+  background-color: var(--yellow);
+  color: var(--navy);
+}
+
+/* Ghost on light bg — navy border */
+.btn-ghost-dark {
+  background-color: transparent;
+  color: var(--navy);
+  border-color: var(--navy);
+}
+.btn-ghost-dark:hover {
+  background-color: var(--navy);
+  color: var(--white);
+}
+
+.btn-sm {
+  font-size: 0.7rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.btn-lg {
+  font-size: 0.875rem;
+  padding: 1.1rem 2.5rem;
+}
+
+/* ============================================================
+   NAVIGATION LINKS — underline from centre animation
+   ============================================================ */
+
+.nav-link {
+  position: relative;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 0;
+  height: 2px;
+  background-color: var(--yellow);
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+}
+
+.nav-link:hover {
+  color: var(--white);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link-active {
+  color: var(--yellow);
+}
+.nav-link-active::after {
+  width: 100%;
+}
+
+/* ============================================================
+   BENTO CARD GRID
+   ============================================================ */
+
+.card-bento {
+  background-color: transparent;
+  border: 1px solid var(--yellow-20);
+  border-radius: 4px;
+  padding: 1.75rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card-bento:hover {
+  border-color: rgba(255, 216, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.card-bento-light {
+  background-color: var(--white);
+  border: 1px solid rgba(2, 47, 66, 0.1);
+  border-radius: 4px;
+  padding: 1.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-bento-light:hover {
+  border-color: rgba(2, 47, 66, 0.25);
+  box-shadow: 0 8px 32px rgba(2, 47, 66, 0.08);
+}
+
+/* ============================================================
+   SCORE GAUGE
+   ============================================================ */
+
+.score-gauge-track {
+  fill: none;
+  stroke: var(--yellow-20);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.score-gauge-fill {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score-gauge-fill-red    { stroke: var(--red); }
+.score-gauge-fill-amber  { stroke: var(--amber); }
+.score-gauge-fill-green  { stroke: var(--green); }
+.score-gauge-fill-yellow { stroke: var(--yellow); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,216,0,0.4); }
+  50%       { box-shadow: 0 0 0 12px rgba(255,216,0,0); }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes gauge-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+.animate-fade-in    { animation: fadeIn 0.4s ease forwards; }
+.animate-pulse-yellow { animation: pulse-yellow 2s ease-in-out infinite; }
+
+/* Cascade delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+
+/* ============================================================
+   TYPING INDICATOR
+   ============================================================ */
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--yellow);
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ============================================================
+   DIMENSION BARS (Score breakdown)
+   ============================================================ */
+
+.dimension-bar-track {
+  height: 6px;
+  background-color: var(--yellow-10);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.dimension-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   SKELETON / BLUR EFFECT (locked report content)
+   ============================================================ */
+
+.content-blurred {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+  position: relative;
+}
+
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, transparent, var(--navy) 60%);
+  z-index: 10;
+}
+
+/* ============================================================
+   CHAT INTERFACE
+   ============================================================ */
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 0.875rem 1.125rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.chat-bubble-ai {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--yellow-20);
+  color: var(--white);
+  border-radius: 4px 12px 12px 12px;
+  align-self: flex-start;
+}
+
+.chat-bubble-user {
+  background-color: var(--yellow);
+  color: var(--navy);
+  border-radius: 12px 4px 12px 12px;
+  align-self: flex-end;
+  font-weight: 600;
+}
+
+/* ============================================================
+   PROGRESS TRACKER
+   ============================================================ */
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  transition: color 0.2s ease;
+}
+
+.progress-step.active  { color: var(--yellow); }
+.progress-step.done    { color: rgba(255,255,255,0.6); }
+
+.progress-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.progress-step.done .progress-step-icon {
+  background-color: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--navy);
+}
+
+/* ============================================================
+   PRICING CARDS
+   ============================================================ */
+
+.pricing-card {
+  border: 1px solid var(--yellow-20);
+  border-radius: 4px;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.pricing-card-featured {
+  border: 2px solid var(--yellow);
+  position: relative;
+}
+
+.pricing-card-featured::before {
+  content: 'MOST POPULAR';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--yellow);
+  color: var(--navy);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 0.25rem 0.875rem;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   INVESTOR DIRECTORY CARD
+   ============================================================ */
+
+.investor-card {
+  background-color: var(--white);
+  border-radius: 4px;
+  padding: 1.5rem;
+  border-left: 3px solid var(--yellow);
+  transition: box-shadow 0.2s ease;
+}
+
+.investor-card:hover {
+  box-shadow: 0 4px 20px rgba(2,47,66,0.1);
+}
+
+/* ============================================================
+   UPLOAD DROP ZONE
+   ============================================================ */
+
+.upload-zone {
+  border: 2px dashed var(--yellow-20);
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--yellow);
+  background-color: var(--yellow-10);
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+
+.insight-card {
+  border: 1px solid var(--yellow-20);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+.priority-high   { border-left: 3px solid var(--red); }
+.priority-medium { border-left: 3px solid var(--amber); }
+.priority-low    { border-left: 3px solid var(--green); }
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+
+::-webkit-scrollbar        { width: 6px; }
+::-webkit-scrollbar-track  { background: var(--navy); }
+::-webkit-scrollbar-thumb  { background: var(--yellow-20); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,216,0,0.4); }
+
+/* ============================================================
+   SELECTION COLOUR
+   ============================================================ */
+
+::selection {
+  background-color: var(--yellow);
+  color: var(--navy);
+}
+
+/* ============================================================
+   INTERVIEW RESULT RESPONSIVE GRIDS
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .result-header-grid { grid-template-columns: 1fr !important; }
+  .result-body-grid   { grid-template-columns: 1fr !important; }
 }
