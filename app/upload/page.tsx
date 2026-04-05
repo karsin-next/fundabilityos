@@ -19,7 +19,7 @@ interface ExtractedData {
   raw_summary?: string;
 }
 
-const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_MB = 10;
 const ACCEPTED_TYPES = ["application/pdf"];
 
 export default function UploadPage() {
@@ -278,7 +278,7 @@ export default function UploadPage() {
                     Drop your pitch deck here
                   </p>
                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.775rem", marginTop: "0.25rem" }}>
-                    or click to browse · PDF only · Max 20MB
+                    or click to browse · PDF only · Max 10MB
                   </p>
                 </div>
               </div>
