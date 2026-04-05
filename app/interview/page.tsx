@@ -51,10 +51,16 @@ export default function InterviewPage() {
   // ============================================================
   function extractAnswers(jsonText: string): Record<string, unknown> | null {
     try {
-      const match = jsonText.match(/\{[\s\S]*"interview_complete"[\s\S]*\}/);
+      // Strip markdown code fences that Claude sometimes wraps JSON in
+      const cleaned = jsonText
+        .replace(/```json\s*/gi, "")
+        .replace(/```\s*/g, "")
+        .trim();
+      
+      const match = cleaned.match(/\{[\s\S]*"interview_complete"[\s\S]*\}/);
       if (!match) return null;
       const parsed = JSON.parse(match[0]);
-      return parsed.interview_complete ? parsed.answers : null;
+      return parsed.interview_complete === true ? parsed.answers : null;
     } catch {
       return null;
     }
@@ -142,9 +148,11 @@ export default function InterviewPage() {
       setStreamingContent("");
       setIsAITyping(false);
 
-      // Check if interview is complete (JSON answer returned)
+      // Only trigger scoring if we have answered all 12 questions AND valid JSON is returned
+      // This prevents Claude from accidentally outputting JSON early
+      const userTurnCount = updatedMessages.filter((m) => m.role === "user").length;
       const answers = extractAnswers(full);
-      if (answers) {
+      if (answers && userTurnCount >= 12) {
         await runScoring(answers);
       } else {
         // Increment question counter (user just answered one)

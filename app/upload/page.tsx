@@ -62,8 +62,8 @@ export default function UploadPage() {
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 15, 60));
-      }, 400);
+        setProgress((prev) => Math.min(prev + 12, 70));
+      }, 500);
 
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
@@ -71,30 +71,35 @@ export default function UploadPage() {
       });
 
       clearInterval(progressInterval);
-      setProgress(65);
+      setProgress(80);
 
       if (!uploadRes.ok) {
         const body = await uploadRes.json().catch(() => ({}));
         throw new Error(body.error || `Upload failed (${uploadRes.status})`);
       }
 
-      const { sessionId } = await uploadRes.json();
-      setUploadState("extracting");
-      setProgress(70);
+      const result = await uploadRes.json();
+      setProgress(100);
 
-      // Poll extraction result
+      // New API returns extracted_data directly — no polling needed
+      if (result.extracted_data) {
+        setExtracted(result.extracted_data);
+        setUploadState("done");
+        return;
+      }
+
+      // Legacy polling fallback (should not be needed with new API)
+      setUploadState("extracting");
+      const sessionId = result.sessionId;
       let attempts = 0;
       while (attempts < 30) {
         await new Promise((r) => setTimeout(r, 2000));
         attempts++;
-
         const checkRes = await fetch(`/api/upload/status?sessionId=${sessionId}`);
         if (!checkRes.ok) continue;
-
         const status = await checkRes.json();
-        setProgress(Math.min(70 + attempts * 3, 95));
-
-        if (status.status === "done") {
+        setProgress(Math.min(80 + attempts * 2, 98));
+        if (status.status === "done" && status.extracted_data) {
           setExtracted(status.extracted_data);
           setProgress(100);
           setUploadState("done");
