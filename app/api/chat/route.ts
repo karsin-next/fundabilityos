@@ -72,7 +72,45 @@ export async function POST(req: NextRequest) {
   const nextQuestionIndex = Math.min(userTurns + 1, INTERVIEW_QUESTIONS.length);
   const nextQuestion = INTERVIEW_QUESTIONS[nextQuestionIndex - 1];
 
+const JSON_SCHEMA_INSTRUCTION = `
+7. You MUST output ONLY valid JSON — no preamble, no explanation, just the JSON object. 
+
+The JSON must match this exact schema:
+{
+  "interview_complete": true,
+  "company": "<company name or 'Unknown'>",
+  "founder_name": "<name or 'Unknown'>",
+  "answers": {
+    "problem_description": "<what they said>",
+    "target_customer": "<who they target>",
+    "market_size_description": "<market size estimate>",
+    "monthly_revenue_usd": <number or 0>,
+    "is_pre_revenue": <true/false>,
+    "product_stage": "<idea|prototype|beta|live>",
+    "active_users_count": <number or 0>,
+    "team_size": <number>,
+    "co_founders": ["<name and role>"],
+    "burn_rate_usd": <monthly burn in USD or 0>,
+    "runway_months": <number>,
+    "funding_raised_usd": <total raised to date or 0>,
+    "funding_type": "<none|angel|seed|series-a|series-b+>",
+    "target_raise_usd": <target raise amount>,
+    "target_round": "<pre-seed|seed|series-a|series-b>",
+    "customer_acquisition": "<how they acquire customers>",
+    "has_cac_data": <true/false>,
+    "main_competitors": ["<competitor names>"],
+    "unfair_advantage": "<their moat claim>",
+    "milestones_with_raise": "<what they'll achieve>",
+    "has_ip_or_patent": <true/false>,
+    "ip_description": "<description or empty string>",
+    "investor_strength": "<what they think investors will love>",
+    "investor_concern": "<what they think investors will push back on>",
+    "answer_quality_notes": "<your qualitative notes on completeness and honesty>"
+  }
+}`;
+
   const contextualSystem = `${INTERVIEW_SYSTEM_PROMPT}
+7. Reference previous answers when relevant to show you're listening.
 
 CURRENT STATE:
 - Questions answered so far: ${userTurns} of 12
@@ -80,7 +118,7 @@ CURRENT STATE:
 - Next question index: ${nextQuestionIndex}
 
 ${userTurns >= 12
-    ? "ALL 12 QUESTIONS HAVE BEEN ANSWERED. Output ONLY the JSON schema now. No preamble."
+    ? `ALL 12 QUESTIONS HAVE BEEN ANSWERED. ${JSON_SCHEMA_INSTRUCTION}`
     : `Ask question ${nextQuestionIndex}: "${nextQuestion?.question}"`
   }`;
 

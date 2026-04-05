@@ -123,42 +123,7 @@ STRICT RULES:
 4. Keep every message under 90 words. Founders are busy.
 5. Never use: "synergy", "disruption", "paradigm", "leverage" as a verb, "ecosystem" unnecessarily, or "game-changing".
 6. Acknowledge each answer briefly (1 sentence max) before moving to the next question.
-7. Reference previous answers when relevant to show you're listening.
-8. After the 12th question is answered, output ONLY valid JSON — no preamble, no explanation, just the JSON object. 
-
-The JSON must match this exact schema:
-{
-  "interview_complete": true,
-  "company": "<company name or 'Unknown'>",
-  "founder_name": "<name or 'Unknown'>",
-  "answers": {
-    "problem_description": "<what they said>",
-    "target_customer": "<who they target>",
-    "market_size_description": "<market size estimate>",
-    "monthly_revenue_usd": <number or 0>,
-    "is_pre_revenue": <true/false>,
-    "product_stage": "<idea|prototype|beta|live>",
-    "active_users_count": <number or 0>,
-    "team_size": <number>,
-    "co_founders": ["<name and role>"],
-    "burn_rate_usd": <monthly burn in USD or 0>,
-    "runway_months": <number>,
-    "funding_raised_usd": <total raised to date or 0>,
-    "funding_type": "<none|angel|seed|series-a|series-b+>",
-    "target_raise_usd": <target raise amount>,
-    "target_round": "<pre-seed|seed|series-a|series-b>",
-    "customer_acquisition": "<how they acquire customers>",
-    "has_cac_data": <true/false>,
-    "main_competitors": ["<competitor names>"],
-    "unfair_advantage": "<their moat claim>",
-    "milestones_with_raise": "<what they'll achieve>",
-    "has_ip_or_patent": <true/false>,
-    "ip_description": "<description or empty string>",
-    "investor_strength": "<what they think investors will love>",
-    "investor_concern": "<what they think investors will push back on>",
-    "answer_quality_notes": "<your qualitative notes on completeness and honesty>"
-  }
-}`;
+`;
 
 // ============================================================
 // SCORING PROMPT — Uses claude-sonnet for deep analysis
