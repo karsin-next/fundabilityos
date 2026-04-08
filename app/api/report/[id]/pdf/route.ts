@@ -37,14 +37,14 @@ export async function GET(
 
     // Render the React component to a Node stream
     const pdfStream = await renderToStream(
-      React.createElement(FundabilityReportPDF, { report })
+      React.createElement(FundabilityReportPDF, { report }) as any
     );
 
     // Convert string stream to standard Response
     return new NextResponse(pdfStream as unknown as ReadableStream, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": \`attachment; filename="FundabilityOS_Report_\${id}.pdf"\`,
+        "Content-Disposition": `attachment; filename="FundabilityOS_Report_${id}.pdf"`,
       },
     });
   } catch (error) {
