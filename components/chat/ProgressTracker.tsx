@@ -1,100 +1,98 @@
-import { INTERVIEW_QUESTIONS } from "@/lib/prompts";
+const CORE_DIMENSIONS = [
+  "Problem",
+  "Market",
+  "Revenue",
+  "Stage",
+  "Team",
+  "Runway",
+  "Funding",
+  "Moat"
+] as const;
+
+export type DimensionType = typeof CORE_DIMENSIONS[number];
 
 interface Props {
-  currentQuestion: number; // 1-based, 0 = not started
-  totalQuestions?: number;
+  currentDimension?: string;
+  coveredDimensions?: string[];
 }
 
-const DIMENSION_LABELS: Record<string, string> = {
-  "Problem / Solution":  "Problem",
-  "Market Size":         "Market",
-  "Revenue":             "Revenue",
-  "Product Stage":       "Product",
-  "Team":                "Team",
-  "Financials / Runway": "Runway",
-  "Previous Funding":    "Funding",
-  "Customer Acquisition":"Growth",
-  "Competition":         "Moat",
-  "Milestones":          "Milestones",
-  "IP / Moat":           "IP",
-  "Self-Awareness":      "Clarity",
-};
-
-export default function ProgressTracker({ currentQuestion, totalQuestions = 12 }: Props) {
-  const progress = Math.min((currentQuestion / totalQuestions) * 100, 100);
+export default function ProgressTracker({ currentDimension, coveredDimensions = [] }: Props) {
+  // Normalize dimension names for comparison
+  const normalize = (d: string) => d.split(" ")[0].trim();
+  const currentNorm = currentDimension ? normalize(currentDimension) : "";
+  const coveredNorms = coveredDimensions.map(normalize);
 
   return (
     <div style={{ width: "100%" }}>
       {/* Header row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.625rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
         <span className="label-mono" style={{ color: "var(--yellow)", fontSize: "0.6rem" }}>
-          FUNDABILITY INTERVIEW
+          AI FUNDABILITY SCAN
         </span>
-        <span className="label-metric" style={{ opacity: 0.5, fontSize: "0.65rem" }}>
-          {currentQuestion} / {totalQuestions} questions
+        <span className="label-metric" style={{ opacity: 0.6, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Dynamic Profiling Active
         </span>
       </div>
 
-      {/* Main progress bar */}
-      <div
-        style={{
-          height: "4px",
-          backgroundColor: "rgba(255,216,0,0.12)",
-          borderRadius: "2px",
-          overflow: "hidden",
-          marginBottom: "1rem",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${progress}%`,
-            backgroundColor: "var(--yellow)",
-            borderRadius: "2px",
-            transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        />
-      </div>
-
-      {/* Dimension pills */}
-      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-        {INTERVIEW_QUESTIONS.map((q, i) => {
-          const isDone = i < currentQuestion;
-          const isCurrent = i === currentQuestion - 1;
-          const label = DIMENSION_LABELS[q.dimension] ?? q.dimension;
+      {/* Dimension grid */}
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+        {CORE_DIMENSIONS.map((dim) => {
+          const isDone = coveredNorms.includes(normalize(dim));
+          const isCurrent = normalize(dim) === currentNorm;
 
           return (
-            <span
-              key={q.index}
+            <div
+              key={dim}
               style={{
                 fontSize: "0.55rem",
                 fontWeight: 700,
-                letterSpacing: "0.07em",
+                letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                padding: "3px 7px",
-                borderRadius: "2px",
+                padding: "4px 9px",
+                borderRadius: "3px",
                 fontFamily: "var(--font-sans)",
-                transition: "all 0.3s ease",
-                backgroundColor: isDone
-                  ? "rgba(255,216,0,0.15)"
-                  : isCurrent
-                  ? "var(--yellow)"
-                  : "rgba(255,255,255,0.04)",
-                color: isDone
-                  ? "var(--yellow)"
-                  : isCurrent
-                  ? "var(--navy)"
-                  : "rgba(255,255,255,0.25)",
-                border: isDone || isCurrent
-                  ? "1px solid var(--yellow-20)"
+                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                backgroundColor: isCurrent 
+                  ? "var(--yellow)" 
+                  : isDone 
+                  ? "rgba(255,216,0,0.12)" 
+                  : "rgba(255,255,255,0.03)",
+                color: isCurrent 
+                  ? "var(--navy)" 
+                  : isDone 
+                  ? "var(--yellow)" 
+                  : "rgba(255,255,255,0.2)",
+                border: isCurrent
+                  ? "1px solid var(--yellow)"
                   : "1px solid rgba(255,255,255,0.06)",
+                boxShadow: isCurrent ? "0 0 15px rgba(255,216,0,0.3)" : "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px"
               }}
             >
-              {isDone ? "✓ " : ""}{label}
-            </span>
+              {isDone && <span style={{ fontSize: "0.65rem" }}>✓</span>}
+              {dim}
+              {isCurrent && (
+                <span style={{ 
+                  width: "4px", 
+                  height: "4px", 
+                  borderRadius: "50%", 
+                  backgroundColor: "var(--navy)",
+                  animation: "pulse 1s infinite"
+                }} />
+              )}
+            </div>
           );
         })}
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes pulse {
+          0% { transform: scale(0.8); opacity: 0.5; }
+          50% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(0.8); opacity: 0.5; }
+        }
+      `}} />
     </div>
   );
 }
