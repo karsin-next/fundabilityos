@@ -613,3 +613,4 @@ Caused by:
 Import trace for requested module:
 ./app/page.tsx
  ✓ Compiled in 76ms (490 modules)
+ ✓ Compiled in 1086ms (1201 modules)

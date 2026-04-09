@@ -567,6 +567,7 @@ export default function HomePage() {
               <p className="text-[#1e4a62] text-sm leading-relaxed font-medium">
                 Access an exclusive, highly-curated deal flow pipeline. Every startup on our platform is pre-vetted with certified MRR, runway verifications, and cap table integrity algorithms.
               </p>
+              </div>
             </div>
           </div>
         </div>
