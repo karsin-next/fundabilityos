@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const supabase = createClient();
 
   const getRedirectByRole = async (): Promise<string> => {
