@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
-  Linkedin as LinkedinIcon, Landmark, CheckCircle2, 
+  Landmark, CheckCircle2, 
   Lock, Zap,
   ShieldAlert, Fingerprint, Globe
 } from "lucide-react";

@@ -44,7 +44,7 @@ export default function AuditHubPage() {
 
         if (error) throw error;
 
-        const completedModuleIds = new Set(data.map(r => r.module_id));
+        const completedModuleIds = new Set(data.map((r: { module_id: string }) => r.module_id));
         
         const updatedModules = subModules.map((m) => {
           const isCompleted = completedModuleIds.has(m.id);
