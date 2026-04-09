@@ -31,7 +31,6 @@ function LoginContent() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [mode, setMode] = useState<"password" | "magic">("password");
 
-  const supabase = createClient();
 
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
