@@ -518,7 +518,7 @@ export default function HomePage() {
                
                <div className="flex flex-col items-center gap-4">
                   <div className="bg-[#10b981] text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-2">
-                    <CheckCircle2 size={14} /> Band: {scoringResult.band}
+                    <CheckCircle2 size={14} /> Stage: {scoringResult.band}
                   </div>
                   <p className="text-white text-center max-w-[500px] text-sm italic font-medium opacity-80 leading-relaxed">
                      &quot;{scoringResult.summary_paragraph}&quot;
@@ -588,7 +588,7 @@ export default function HomePage() {
                </div>
                <div className="flex flex-wrap justify-center gap-4">
                   <Link href="/checkout" className="btn btn-ghost border-white/20 text-white hover:bg-white hover:text-[#022f42] px-6 py-4 font-black uppercase tracking-widest text-[10px] shadow-xl transition-all flex items-center gap-2 group">
-                    UNLOCK REPORT ($29) <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    UNLOCK FULL 8-DIMENSION SCORES ($29) <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </Link>
                   <Link href="/dashboard" className="bg-[#ffd800] text-[#022f42] px-8 py-4 font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-white transition-all flex items-center gap-2 group">
                     ENTER DASHBOARD <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
