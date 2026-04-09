@@ -521,7 +521,7 @@ export default function HomePage() {
                     <CheckCircle2 size={14} /> Band: {scoringResult.band}
                   </div>
                   <p className="text-white text-center max-w-[500px] text-sm italic font-medium opacity-80 leading-relaxed">
-                     "{scoringResult.summary_paragraph}"
+                     &quot;{scoringResult.summary_paragraph}&quot;
                   </p>
                </div>
             </div>
