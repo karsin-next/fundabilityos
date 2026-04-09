@@ -1,0 +1,28 @@
+ ⚠ Port 3000 is in use by process 3363, using available port 3001 instead.
+   ▲ Next.js 15.5.14
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.50.90:3001
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+2026-04-09T12:21:40.011Z next:router-server:filesystem nextDataRoutes Set(0) {}
+2026-04-09T12:21:40.013Z next:router-server:filesystem dynamicRoutes []
+2026-04-09T12:21:40.013Z next:router-server:filesystem customRoutes {
+  headers: [],
+  rewrites: { beforeFiles: [], afterFiles: [], fallback: [] },
+  redirects: [
+    {
+      source: '/:path+/',
+      destination: '/:path+',
+      permanent: true,
+      locale: undefined,
+      internal: true
+    }
+  ]
+}
+2026-04-09T12:21:40.013Z next:router-server:filesystem publicFolderItems Set(0) {}
+2026-04-09T12:21:40.013Z next:router-server:filesystem nextStaticFolderItems Set(0) {}
+2026-04-09T12:21:40.013Z next:router-server:filesystem pageFiles Set(0) {}
+2026-04-09T12:21:40.013Z next:router-server:filesystem appFiles Set(0) {}

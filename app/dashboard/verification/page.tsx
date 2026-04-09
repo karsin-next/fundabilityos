@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
-  ShieldCheck, Linkedin, Landmark, CheckCircle2, 
-  ExternalLink, AlertCircle, Lock, Zap, ArrowRight,
-  ShieldAlert, Fingerprint
+  Linkedin as LinkedinIcon, Landmark, CheckCircle2, 
+  Lock, Zap,
+  ShieldAlert, Fingerprint, Globe
 } from "lucide-react";
 
 export default function VerificationPage() {
@@ -27,7 +27,7 @@ export default function VerificationPage() {
       <ModuleHeader 
         badge="Trust & Verification"
         title="Institutional Proof Layer"
-        description="Verify your financial data and founding identity to unlock 'Institutional Grade' badging on your Deal Room."
+        description="Verify your financial data and founding identity to unlock &apos;Institutional Grade&apos; badging on your Deal Room."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
@@ -35,7 +35,7 @@ export default function VerificationPage() {
         <div className={`p-8 border-2 transition-all relative rounded-sm ${isLinkedInConnected ? 'border-emerald-500 bg-emerald-50/30' : 'border-[#0a66c2]/10 bg-white hover:border-[#0a66c2]/30'}`}>
           <div className="flex justify-between items-start mb-6">
             <div className={`w-12 h-12 flex items-center justify-center rounded-sm shadow-lg ${isLinkedInConnected ? 'bg-emerald-500 text-white' : 'bg-[#0a66c2] text-white'}`}>
-              <Linkedin className="w-6 h-6" />
+              <Globe className="w-6 h-6" />
             </div>
             {isLinkedInConnected ? (
               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1 bg-emerald-100 px-2 py-1 rounded-sm">
@@ -56,7 +56,7 @@ export default function VerificationPage() {
               onClick={handleLinkedInConnect}
               className="w-full bg-[#0a66c2] text-white py-4 text-xs font-black uppercase tracking-widest hover:bg-[#084e96] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#0a66c2]/20"
             >
-              Connect LinkedIn <Linkedin className="w-4 h-4" />
+              Connect LinkedIn <Globe className="w-4 h-4" />
             </button>
           ) : (
             <div className="text-xs font-bold text-[#1e4a62] bg-white border border-emerald-100 p-4 rounded-sm">

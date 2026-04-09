@@ -14,6 +14,20 @@ import {
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
+interface NavItem {
+  name: string;
+  href: string;
+  icon: any;
+  children?: NavItem[];
+  isLocked?: boolean;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+  isLocked?: boolean;
+}
+
 // Full sitemap tree structure from Table 1 Methodology
 const siteMap = [
   {
@@ -229,7 +243,7 @@ export function DashboardSidebar() {
   useEffect(() => {
     const activeSection = siteMap.find(section => 
       section.items.some(item => 
-        isActive(item.href) || isAnyChildActive((item as any).children)
+        isActive(item.href) || isAnyChildActive(item.children)
       )
     );
     if (activeSection) {
@@ -273,25 +287,25 @@ export function DashboardSidebar() {
               <div key={section.label}>
                 {/* Section header */}
                 <button 
-                  onClick={() => !(section as any).isLocked && toggleSection(section.label)}
-                  disabled={(section as any).isLocked}
+                  onClick={() => !section.isLocked && toggleSection(section.label)}
+                  disabled={section.isLocked}
                   className={`w-full px-4 mb-1 flex items-center justify-between group ${
-                    (section as any).isLocked ? "cursor-not-allowed opacity-50" : ""
+                    section.isLocked ? "cursor-not-allowed opacity-50" : ""
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {(section as any).isLocked && <Lock className="w-3 h-3 text-[#b0d0e0] opacity-50" />}
+                    {section.isLocked && <Lock className="w-3 h-3 text-[#b0d0e0] opacity-50" />}
                     <h3 className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
                       isExpanded 
                         ? "text-[#ffd800]" 
-                        : (section as any).isLocked 
+                        : section.isLocked 
                           ? "text-[#b0d0e0]/40" 
                           : "text-[#b0d0e0]/60 group-hover:text-[#b0d0e0]"
                     }`}>
-                      {section.label} {(section as any).isLocked && <span className="text-[#ffd800]/70 ml-1 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">PRO</span>}
+                      {section.label} {section.isLocked && <span className="text-[#ffd800]/70 ml-1 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">PRO</span>}
                     </h3>
                   </div>
-                  {!(section as any).isLocked && (
+                  {!section.isLocked && (
                     <ChevronRight className={`w-3 h-3 text-[#b0d0e0]/30 transition-transform duration-300 ${isExpanded ? "rotate-90 text-[#ffd800]" : ""}`} />
                   )}
                 </button>
@@ -304,7 +318,7 @@ export function DashboardSidebar() {
                 >
                   {section.items.map((item) => {
                     const active = isActive(item.href);
-                    const childActive = isAnyChildActive((item as any).children);
+                    const childActive = isAnyChildActive(item.children);
 
                     return (
                       <div key={item.href}>
@@ -324,19 +338,19 @@ export function DashboardSidebar() {
                             <span className={`truncate ${active ? "text-[#ffd800] font-black" : ""}`}>{item.name}</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            {(item as any).soon && (
+                            {item.isLocked && (
                               <span className="text-[7px] font-black uppercase tracking-widest text-[#ffd800]/50 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">Soon</span>
                             )}
-                            {(item as any).children && (
+                            {item.children && (
                               <ChevronRight className={`w-3 h-3 transition-transform ${childActive ? "rotate-90 text-[#ffd800]" : "text-white/30"}`} />
                             )}
                           </div>
                         </Link>
 
                         {/* Sub-items (level 2) */}
-                        {(item as any).children && childActive && (
+                        {item.children && childActive && (
                           <div className="ml-3 mt-1 mb-2 border-l border-[#1b4f68]/60 pl-2 space-y-0.5">
-                            {(item as any).children.map((child: any) => {
+                            {item.children.map((child: NavItem) => {
                               const childIsActive = isActive(child.href);
                               return (
                                 <Link

@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 import { AIAssistedInsight } from "@/components/AIAssistedInsight";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
-  ArrowRight, ArrowLeft, Activity, 
-  Sparkles, ExternalLink, ArrowUpCircle, ArrowDownCircle
+  ArrowRight, ArrowLeft,
+  ArrowUpCircle, ArrowDownCircle
 } from "lucide-react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 
@@ -45,13 +44,13 @@ export default function CashFlowPage() {
         .single();
 
       if (report?.financial_snapshot) {
-        const snap = report.financial_snapshot as any;
-        if (snap.cashFlow) setData(snap.cashFlow);
+        const snap = report.financial_snapshot as Record<string, number>;
+        if (snap.cashFlow) setData(snap.cashFlow as any);
       }
       setIsLoaded(true);
     }
     loadData();
-  }, [user]);
+  }, [user, supabase]);
 
   // Calculations
   const totalIn = (data.receipts || 0) + (data.newFunding || 0);
@@ -83,7 +82,7 @@ export default function CashFlowPage() {
         .limit(1)
         .single();
 
-      const existingSnapshot = (latestReport?.financial_snapshot as any) || {};
+      const existingSnapshot = (latestReport?.financial_snapshot as Record<string, any>) || {};
       const newSnapshot = {
         ...existingSnapshot,
         cashFlow: data,
@@ -184,8 +183,8 @@ export default function CashFlowPage() {
 
           {/* STEP 3: Net Flow Summary */}
           {step === 3 && (
-            <div className="bg-white p-8 md:p-10 shadow-lg border-t-[4px] border-[#ffd800] rounded-sm animate-in fade-in slide-in-from-right-4 duration-500">
-              <h2 className="text-2xl font-black text-[#022f42] mb-10 text-center">Net Cash Flow Delta</h2>
+            <div className="bg-white p-10 shadow-lg border-t-[4px] border-[#ffd800] rounded-sm animate-in fade-in slide-in-from-right-4 duration-500">
+              <h2 className="text-2xl font-black text-[#022f42] mb-10 text-center uppercase tracking-tight">Scenario &apos;What-If&apos; Stress Test</h2>
               
               <div className="flex flex-col items-center justify-center mb-12">
                  <div className={`p-10 rounded-full border-8 ${netFlow >= 0 ? 'border-emerald-500 bg-emerald-50' : 'border-rose-500 bg-rose-50'} transition-colors duration-500`}>

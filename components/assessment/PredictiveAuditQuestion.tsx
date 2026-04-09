@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, Info, MessageSquare, Sparkles, Save, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface Option {
   id: string;
@@ -10,13 +10,18 @@ interface Option {
   value: number;
 }
 
+interface ResponseData {
+  selectedOption: string;
+  openText: string;
+}
+
 interface PredictiveAuditQuestionProps {
   moduleId: string;
   questionTitle: string;
   options: Option[];
   placeholder?: string;
-  onSave?: (data: any) => void;
-  initialData?: any;
+  onSave?: (data: ResponseData) => void;
+  initialData?: Partial<ResponseData>;
 }
 
 export function PredictiveAuditQuestion({
@@ -27,6 +32,7 @@ export function PredictiveAuditQuestion({
   onSave,
   initialData
 }: PredictiveAuditQuestionProps) {
+  const supabase = createClient();
   const [selectedOption, setSelectedOption] = useState<string>(initialData?.selectedOption || "");
   const [openText, setOpenText] = useState<string>(initialData?.openText || "");
   const [isSaving, setIsSaving] = useState(false);

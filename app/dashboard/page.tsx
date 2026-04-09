@@ -2,13 +2,14 @@
 
 import { 
   Target, Users, ShieldCheck, 
-  TrendingUp, Globe, BarChart3, ChevronRight, CheckCircle2, PlayCircle, ClipboardList, ArrowRight
+  TrendingUp, Globe, BarChart3, ChevronRight, CheckCircle2, PlayCircle, ClipboardList, ArrowRight,
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import { AIAuditScanner } from "@/components/assessment/AIAuditScanner";
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 const subModules = [
   { id: "1-problem", title: "The Problem Diagnostic", icon: Target, desc: "Are you solving a real, painful problem?", status: "not_started", time: "3 min" },
@@ -24,8 +25,8 @@ const subModules = [
 export default function AuditHubPage() {
   const { user } = useAuth();
   const [modules, setModules] = useState(subModules);
-  const [overallProgress, setOverallProgress] = useState(0);
   const [recentScore, setRecentScore] = useState<number | null>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchAuditData() {
@@ -63,8 +64,6 @@ export default function AuditHubPage() {
         }
 
         setModules(updatedModules);
-        const completedCount = updatedModules.filter(m => m.status === 'completed').length;
-        setOverallProgress(Math.round((completedCount / subModules.length) * 100));
       } catch (err) {
         console.error("Failed to fetch audit data:", err);
       }
@@ -125,7 +124,7 @@ export default function AuditHubPage() {
               Your <span className="text-gradient">Fundability</span> <br/>Sequence.
             </h2>
             <p className="text-[#b0d0e0] text-sm max-w-xl leading-relaxed font-medium">
-              We've analyzed your current trajectory across 8 core dimensions. You are currently in the <strong>{recentScore ? (recentScore > 70 ? 'Top 15%' : 'Top 40%') : 'Diagnostic'}</strong> of ASEAN founders in your sector.
+              We&apos;ve analyzed your current trajectory across 8 core dimensions. You are currently in the <strong>{recentScore ? (recentScore > 70 ? 'Top 15%' : 'Top 40%') : 'Diagnostic'}</strong> of ASEAN founders in your sector.
             </p>
           </div>
 

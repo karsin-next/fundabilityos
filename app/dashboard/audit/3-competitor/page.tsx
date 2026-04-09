@@ -48,7 +48,7 @@ export default function CompetitorDiagnosticPage() {
             </div>
             <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#ffd800] mb-4">Investor Lens</h4>
             <p className="text-xs leading-relaxed text-[#b0d0e0] font-medium uppercase tracking-tight">
-              &quot;If Microsoft or Google entered this market tomorrow, what is the specific reason you wouldn't be wiped out instantly?&quot;
+              &quot;If Microsoft or Google entered this market tomorrow, what is the specific reason you wouldn&apos;t be wiped out instantly?&quot;
             </p>
           </div>
 

@@ -49,7 +49,7 @@ export default function ProblemDiagnosticPage() {
             </div>
             <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#ffd800] mb-4">Investor Lens</h4>
             <p className="text-xs leading-relaxed text-[#b0d0e0] font-medium uppercase tracking-tight">
-              &quot;Is this a Vitamin or a Painkiller? If the customer doesn't buy your product, does their business stop working, or do they just stay the same?&quot;
+              &quot;Is this a Vitamin or a Painkiller? If the customer doesn&apos;t buy your product, does their business stop working, or do they just stay the same?&quot;
             </p>
           </div>
 

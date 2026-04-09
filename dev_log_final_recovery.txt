@@ -1,0 +1,536 @@
+
+> fundabilityos-app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.14
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.50.90:3000
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ✓ Ready in 1598ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 775ms (166 modules)
+ ○ Compiling / ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (215kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled / in 3.9s (803 modules)
+ GET / 200 in 4603ms
+ ✓ Compiled in 813ms (328 modules)
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 3.6s (492 modules)
+ GET /favicon.ico 200 in 3936ms
+ GET / 200 in 529ms
+ GET /favicon.ico 200 in 28ms
+ GET / 200 in 130ms
+ GET /favicon.ico 200 in 25ms
+ ○ Compiling /interview ...
+ ✓ Compiled /interview in 656ms (813 modules)
+ GET /interview 200 in 786ms
+ ○ Compiling /api/interview/tree ...
+ ✓ Compiled /api/interview/tree in 654ms (873 modules)
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtCVkrnUzT4CFKR4sGNT"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:29:42 GMT',
+    'content-type': 'application/json',
+    'content-length': '130',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtCVkrnUzT4CFKR4sGNT',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '73',
+    'server-timing': 'x-originResponse;dur=75',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=jfRBJcHBT1NT9UOqjkXTYVsHNZsYMVn.W4Bh227u5uE-1775737782.6634536-1.0.1.1-bfUHBOcBhiyCuiAxKxBxz.PSnHzG7aJFrSfMpOauxj8; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e9984d5aae346c4-KUL'
+  },
+  requestID: 'req_011CZtCVkrnUzT4CFKR4sGNT',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 1228ms
+ GET /interview 200 in 367ms
+ GET /favicon.ico 200 in 50ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtCWSPorWu93NvdiR66Q"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:29:52 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtCWSPorWu93NvdiR66Q',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '25',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=26',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=9duGtURPDeosbjHK3tgWDPmOuhlro7N8JOGoO0PN6Kk-1775737791.9190204-1.0.1.1-Ty1XYFlijq1EhUocFsviN3feNgsz.8B35PgUq7vJq5I; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e99850f7e54cc5f-KUL'
+  },
+  requestID: 'req_011CZtCWSPorWu93NvdiR66Q',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 426ms
+ GET / 200 in 42ms
+ GET / 200 in 96ms
+ GET /favicon.ico 200 in 23ms
+ GET / 200 in 53ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtCc2BgndpQWy5a3Ujms"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:31:08 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtCc2BgndpQWy5a3Ujms',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '180',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=182',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=hpN.rKCE62TKjgHaPMFYPSPNNdYqOfcOMnmAPrhH5aA-1775737867.630929-1.0.1.1-vmgyCMzKcVeX539kNA_tSLLSZKQzB_qknEXoPNjOZ9E; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e9986e8ab95b4d6-KUL'
+  },
+  requestID: 'req_011CZtCc2BgndpQWy5a3Ujms',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 588ms
+ ✓ Compiled in 1106ms (811 modules)
+ GET / 200 in 176ms
+ ✓ Compiled in 740ms (811 modules)
+ GET / 200 in 120ms
+ ✓ Compiled in 1552ms (811 modules)
+ ✓ Compiled in 227ms (331 modules)
+ GET / 200 in 140ms
+ GET / 200 in 17ms
+ ✓ Compiled in 1063ms (811 modules)
+ GET / 200 in 167ms
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:326:1]
+ [2m323[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m324[0m |                   )}
+ [2m325[0m |                 </div>
+ [2m326[0m |               )}
+     : [35;1m               ^[0m
+ [2m327[0m | 
+ [2m328[0m |               {/* Verified Proof Banner */}
+ [2m329[0m |               <div
+     `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m
+  [31m|[0m         )'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:418:1]
+ [2m415[0m |                   </div>
+ [2m416[0m |                 )}
+ [2m417[0m |               </div>
+ [2m418[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m         </div>
+ [2m419[0m | [35;1m|[0m   
+ [2m420[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m         <style>{`
+ [2m421[0m |               @media (max-width: 900px) {
+ [2m422[0m |                 .hero-grid { grid-template-columns: 1fr !important; }
+ [2m423[0m |                 .hero-right { display: none !important; }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ ○ Compiling /_error ...
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:326:1]
+ [2m323[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m324[0m |                   )}
+ [2m325[0m |                 </div>
+ [2m326[0m |               )}
+     : [35;1m               ^[0m
+ [2m327[0m | 
+ [2m328[0m |               {/* Verified Proof Banner */}
+ [2m329[0m |               <div
+     `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m
+  [31m|[0m         )'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:418:1]
+ [2m415[0m |                   </div>
+ [2m416[0m |                 )}
+ [2m417[0m |               </div>
+ [2m418[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m         </div>
+ [2m419[0m | [35;1m|[0m   
+ [2m420[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m         <style>{`
+ [2m421[0m |               @media (max-width: 900px) {
+ [2m422[0m |                 .hero-grid { grid-template-columns: 1fr !important; }
+ [2m423[0m |                 .hero-right { display: none !important; }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ GET / 500 in 4688ms
+ GET / 500 in 15ms
+ GET / 500 in 19ms
+ ✓ Compiled /_error in 605ms (468 modules)
+ GET / 500 in 82ms
+ ✓ Compiled in 529ms (468 modules)
+ GET / 500 in 157ms
+ GET / 500 in 50ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ○ Compiling /favicon.ico ...
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:326:1]
+ [2m323[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m324[0m |                   )}
+ [2m325[0m |                 </div>
+ [2m326[0m |               )}
+     : [35;1m               ^[0m
+ [2m327[0m | 
+ [2m328[0m |               {/* Verified Proof Banner */}
+ [2m329[0m |               <div
+     `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m
+  [31m|[0m         )'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:418:1]
+ [2m415[0m |                   </div>
+ [2m416[0m |                 )}
+ [2m417[0m |               </div>
+ [2m418[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m         </div>
+ [2m419[0m | [35;1m|[0m   
+ [2m420[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m         <style>{`
+ [2m421[0m |               @media (max-width: 900px) {
+ [2m422[0m |                 .hero-grid { grid-template-columns: 1fr !important; }
+ [2m423[0m |                 .hero-right { display: none !important; }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:326:1]
+ [2m323[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m324[0m |                   )}
+ [2m325[0m |                 </div>
+ [2m326[0m |               )}
+     : [35;1m               ^[0m
+ [2m327[0m | 
+ [2m328[0m |               {/* Verified Proof Banner */}
+ [2m329[0m |               <div
+     `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m
+  [31m|[0m         )'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:418:1]
+ [2m415[0m |                   </div>
+ [2m416[0m |                 )}
+ [2m417[0m |               </div>
+ [2m418[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m         </div>
+ [2m419[0m | [35;1m|[0m   
+ [2m420[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m         <style>{`
+ [2m421[0m |               @media (max-width: 900px) {
+ [2m422[0m |                 .hero-grid { grid-template-columns: 1fr !important; }
+ [2m423[0m |                 .hero-right { display: none !important; }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ GET / 500 in 399ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:326:1]
+ [2m323[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m324[0m |                   )}
+ [2m325[0m |                 </div>
+ [2m326[0m |               )}
+     : [35;1m               ^[0m
+ [2m327[0m | 
+ [2m328[0m |               {/* Verified Proof Banner */}
+ [2m329[0m |               <div
+     `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m
+  [31m|[0m         )'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:418:1]
+ [2m415[0m |                   </div>
+ [2m416[0m |                 )}
+ [2m417[0m |               </div>
+ [2m418[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m         </div>
+ [2m419[0m | [35;1m|[0m   
+ [2m420[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m         <style>{`
+ [2m421[0m |               @media (max-width: 900px) {
+ [2m422[0m |                 .hero-grid { grid-template-columns: 1fr !important; }
+ [2m423[0m |                 .hero-right { display: none !important; }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ GET / 500 in 63ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:322:1]
+ [2m319[0m |                     <QuickAssess isEmbedded={true} onComplete={handleComplete} />
+ [2m320[0m |                   )}
+ [2m321[0m |                 </div>
+ [2m322[0m |               )}
+     : [35;1m               ^[0m
+ [2m323[0m |     </div>
+ [2m324[0m |               )}
+     `----
+  [31mx[0m Expected '</', got 'div'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:323:1]
+ [2m320[0m |                   )}
+ [2m321[0m |                 </div>
+ [2m322[0m |               )}
+ [2m323[0m |     </div>
+     : [35;1m      ^^^[0m
+ [2m324[0m |               )}
+ [2m325[0m | 
+ [2m326[0m |               {/* Verified Proof Banner */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ GET / 200 in 46ms
+ GET / 500 in 17ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled /_not-found in 1759ms (1157 modules)
+ GET / 200 in 517ms
+ ⨯ ./app/page.tsx
+Error:   [31mx[0m Expected ')', got 'return'
+     ,-[[36;1;4m/Users/user/Documents/KarSin/NextBlaze/FundabilityOS/app/page.tsx[0m:202:1]
+ [2m199[0m |     setShowAssessment(false);
+ [2m200[0m |   };
+ [2m201[0m | 
+ [2m202[0m |   if (!isHydr  return (
+     : [35;1m               ^^^^^^[0m
+ [2m203[0m |     <div style={{ paddingTop: "68px" }}>
+ [2m204[0m | 
+ [2m205[0m |       {/* =============================================
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.tsx
+ GET / 500 in 99ms
+ ✓ Compiled in 3.6s (1143 modules)
+ GET / 200 in 205ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 467ms
+ GET /interview 200 in 106ms
+ ○ Compiling /api/interview/tree ...
+ ✓ Compiled /api/interview/tree in 1313ms (748 modules)
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtDjucPWq1brDiKYXhzy"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:46:01 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtDjucPWq1brDiKYXhzy',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '25',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=27',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=uRvuuY3TGbQyIdjIn0oLiOXG9C0FAB6Rwxkh.70KPsU-1775738761.458156-1.0.1.1-fT9AV.7Hbd5IsrVYHvn08dyjfPQbylhgb.iwj3fx8go; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e999cbb18ad9928-KUL'
+  },
+  requestID: 'req_011CZtDjucPWq1brDiKYXhzy',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 1984ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtDkLQQ8RbbHEfebMvgh"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:46:07 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtDkLQQ8RbbHEfebMvgh',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '20',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=23',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=J7XmEdQ387I1MLKmoM1eRF_DRtsRUoX7ReqOdzeut9I-1775738767.26064-1.0.1.1-ab.6wDuJ6wM_EA8XcJxzQEg9bssCaFrbHyulfFUpLOg; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e999cdf688c5e23-KUL'
+  },
+  requestID: 'req_011CZtDkLQQ8RbbHEfebMvgh',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 401ms
+ GET / 200 in 91ms
+ GET / 200 in 21ms
+ GET / 200 in 22ms
+ GET / 200 in 26ms
+ GET / 200 in 24ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtDmngjCwAKp282WiGU7"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:46:27 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtDmngjCwAKp282WiGU7',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '368',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=370',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=yuvdJJ0rl37bDaEX1fWdVsWcrFLMBc664aKCUkK7NlM-1775738786.9500062-1.0.1.1-XppA8DQ5agRRbja38oCErMmOn1wNssiparaKFck37XU; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e999d5a6d2f310b-KUL'
+  },
+  requestID: 'req_011CZtDmngjCwAKp282WiGU7',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 765ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtDmwy5gvuQWsooideH5"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 12:46:29 GMT',
+    'content-type': 'application/json',
+    'content-length': '130',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtDmwy5gvuQWsooideH5',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '84',
+    'server-timing': 'x-originResponse;dur=89',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=LqYSRcSoXBccs.1vJP2bX8MuybaezUa2tFo86QQKroY-1775738789.12998-1.0.1.1-TsUxHywK99rGXr4XrtjlOFzbg2ixC5HsyJfv_MXciW8; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e999d680e53310b-KUL'
+  },
+  requestID: 'req_011CZtDmwy5gvuQWsooideH5',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 405ms
+ GET / 200 in 229ms
+ ○ Compiling /upload ...
+ ✓ Compiled /upload in 932ms (1232 modules)
+ GET /upload 200 in 1044ms
+ GET / 200 in 479ms
+[Stream Error]: [Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CZtF7Tm7orMs9tSDLcbF3"}] {
+  status: 401,
+  headers: Headers {
+    date: 'Thu, 09 Apr 2026 13:04:00 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CZtF7Tm7orMs9tSDLcbF3',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    server: 'cloudflare',
+    'x-envoy-upstream-service-time': '22',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'server-timing': 'x-originResponse;dur=25',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '_cfuvid=CeqWbmG33PdKGHlO11CQa6oHwH6COpSMYrVBS.iRLvw-1775739840.6839423-1.0.1.1-7_cmxg3TyGBpnADhNM2xb2A15ZgQdl2y1SSG4v6unj0; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.anthropic.com',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+    'x-robots-tag': 'none',
+    'cf-ray': '9e99b714483f6b5d-KUL'
+  },
+  requestID: 'req_011CZtF7Tm7orMs9tSDLcbF3',
+  error: [Object],
+  type: 'authentication_error'
+}
+ POST /api/interview/tree 200 in 938ms
+ ✓ Compiled in 1052ms (489 modules)
+ ✓ Compiled in 610ms (489 modules)
+ ✓ Compiled in 992ms (1172 modules)
+ ✓ Compiled in 775ms (1172 modules)
+ ✓ Compiled in 366ms (489 modules)
+ ✓ Compiled in 191ms (489 modules)
+ ✓ Compiled in 1378ms (1324 modules)
+ ✓ Compiled in 334ms (489 modules)
+ ✓ Compiled in 468ms (489 modules)
+ ✓ Compiled in 2.1s (489 modules)
+ ✓ Compiled in 222ms (489 modules)
+ ✓ Compiled in 92ms (489 modules)
+ ✓ Compiled in 242ms (489 modules)
+ ✓ Compiled in 172ms (489 modules)
+ ✓ Compiled in 161ms (489 modules)
+ ✓ Compiled in 112ms (489 modules)
+ ✓ Compiled in 175ms (489 modules)
+ ✓ Compiled in 319ms (489 modules)
+ ✓ Compiled in 897ms (1172 modules)
+ ✓ Compiled in 294ms (489 modules)
+ ✓ Compiled in 455ms (489 modules)
+ ✓ Compiled in 194ms (489 modules)
+ ✓ Compiled in 248ms (489 modules)
+ ✓ Compiled in 215ms (489 modules)
+ ✓ Compiled in 249ms (489 modules)
+ ✓ Compiled in 248ms (489 modules)
+ ✓ Compiled in 264ms (489 modules)
+ ✓ Compiled in 287ms (489 modules)
+ ✓ Compiled in 215ms (489 modules)
+ ✓ Compiled in 172ms (489 modules)
+ ✓ Compiled in 245ms (489 modules)
+ ✓ Compiled in 162ms (489 modules)
+ ✓ Compiled in 1019ms (489 modules)
+ ✓ Compiled in 253ms (489 modules)
+ ✓ Compiled in 705ms (1172 modules)
+ ✓ Compiled in 199ms (489 modules)
+ ✓ Compiled in 182ms (489 modules)

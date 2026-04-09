@@ -34,7 +34,7 @@ export default function InvestorTargetingHubPage() {
         .limit(1)
         .single();
 
-      const responses = (report?.audit_responses as any) || {};
+      const responses = (report?.audit_responses as Record<string, any>) || {};
       const hasProfile = !!responses["3.2.1"];
       const hasPortfolio = !!responses["3.2.2"];
 
@@ -51,9 +51,8 @@ export default function InvestorTargetingHubPage() {
       const completedCount = [hasProfile, hasPortfolio].filter(Boolean).length;
       setOverallProgress(Math.round((completedCount / investorModules.length) * 100));
     }
-
     loadProgress();
-  }, [user]);
+  }, [user, supabase]);
 
   const resetModule = () => {
     if (confirm("Reset all Investor Targeting progress data?")) {

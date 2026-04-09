@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { AIAssistedInsight } from "@/components/AIAssistedInsight";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
-  ArrowRight, ArrowLeft, Activity, 
-  DollarSign, Sparkles, ExternalLink, Calculator
+  ArrowRight, ArrowLeft,
+  Calculator
 } from "lucide-react";
 import Link from "next/link";
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
@@ -44,13 +44,13 @@ export default function BreakevenPage() {
         .single();
 
       if (report?.financial_snapshot) {
-        const snap = report.financial_snapshot as any;
+        const snap = report.financial_snapshot as Record<string, any>;
         if (snap.breakeven) setData(snap.breakeven);
       }
       setIsLoaded(true);
     }
     loadData();
-  }, [user]);
+  }, [user, supabase]);
 
   // Calculations
   const totalFixed = data.fixedCosts + data.interestExpense;
@@ -85,7 +85,7 @@ export default function BreakevenPage() {
         .limit(1)
         .single();
 
-      const existingSnapshot = (latestReport?.financial_snapshot as any) || {};
+      const existingSnapshot = (latestReport?.financial_snapshot as Record<string, any>) || {};
       const newSnapshot = {
         ...existingSnapshot,
         breakeven: data,

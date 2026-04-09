@@ -35,7 +35,7 @@ export default function FinancialsHubPage() {
         .limit(1)
         .single();
 
-      const snapshot = report?.financial_snapshot as any;
+      const snapshot = report?.financial_snapshot as Record<string, any>;
       
       // Mock completion status based on snapshot presence
       const hasMetrics = !!snapshot?.metrics;
@@ -67,7 +67,7 @@ export default function FinancialsHubPage() {
     }
 
     loadState();
-  }, [user]);
+  }, [user, supabase]);
 
   const resetModule = async () => {
     if (confirm("Are you sure you want to reset all financial data?")) {

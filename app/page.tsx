@@ -31,11 +31,11 @@ const HOW_IT_WORKS = [
 
 const PROBLEMS = [
   {
-    headline: "You don't know your gaps until investors reject you.",
-    sub: "Most founders discover their weaknesses in the room — when it's already too late to fix them.",
+    headline: "You don&apos;t know your gaps until investors reject you.",
+    sub: "Most founders discover their weaknesses in the room — when it&apos;s already too late to fix them.",
   },
   {
-    headline: "You're guessing what investors actually want.",
+    headline: "You&apos;re guessing what investors actually want.",
     sub: "VCs evaluate 8 specific dimensions. Most founders prepare for 3. The other 5 kill deals silently.",
   },
   {
@@ -60,7 +60,7 @@ const FOR_WHO = [
   {
     tag: "EXPERIENCED FOUNDERS",
     headline: "Closing a bridge or Series A?",
-    desc: "Know your score in this market. Investors are pickier now. Don't walk in unprepared.",
+    desc: "Know your score in this market. Investors are pickier now. Don&apos;t walk in unprepared.",
     icon: <Shield size={18} />,
   },
 ];
@@ -150,7 +150,7 @@ const PRICING = [
 export default function HomePage() {
   const { user } = useAuth();
   const [showAssessment, setShowAssessment] = useState(false);
-  const [scoringResult, setScoringResult] = useState<any>(null);
+  const [scoringResult, setScoringResult] = useState<Record<string, any> | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const supabase = createClient();
 
@@ -188,9 +188,9 @@ export default function HomePage() {
     }
 
     hydrateScore();
-  }, [user]);
+  }, [user, supabase]);
 
-  const handleComplete = async (result: any) => {
+  const handleComplete = async (result: Record<string, any>) => {
     setScoringResult(result);
     // Persist to LocalStorage
     localStorage.setItem("FUNDABILITY_QA_LATEST", JSON.stringify(result));

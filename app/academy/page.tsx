@@ -137,7 +137,7 @@ export default function AcademyPage() {
                   <ShieldCheck className="w-4 h-4 text-emerald-500" /> Weekly Alpha Digest
                 </h4>
                 <p className="text-xs text-gray-500 font-bold mb-6 italic leading-relaxed">
-                  "The CAC:LTV ratio for 2026 is tightening. Most seed rounds now require a &gt;3.5x ratio to clear lead VC committees."
+                  &quot;The CAC:LTV ratio for 2026 is tightening. Most seed rounds now require a &gt;3.5x ratio to clear lead VC committees.&quot;
                 </p>
                 <div className="space-y-4">
                   <input 

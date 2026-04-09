@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { AIAssistedInsight } from "@/components/AIAssistedInsight";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
-  ArrowRight, ArrowLeft, Info, Activity, Save, 
-  Check, DollarSign, TrendingDown, TrendingUp, Sparkles, ExternalLink, Calculator, Calendar,
-  CheckCircle2, Plus, X, BarChart, LayoutDashboard, PieChart, Layers
+  ArrowRight, ArrowLeft,
+  Check, DollarSign, TrendingUp, Calculator,
+  CheckCircle2, Plus, X, BarChart, PieChart, Layers
 } from "lucide-react";
 import Link from "next/link";
 import { 
@@ -50,14 +50,14 @@ export default function FinancialMetricsPage() {
         .single();
 
       if (report?.financial_snapshot) {
-        const snap = report.financial_snapshot as any;
+        const snap = report.financial_snapshot as Record<string, any>;
         if (snap.metrics) setMetrics(snap.metrics);
         if (snap.activeIds) setActiveIds(snap.activeIds);
       }
       setIsLoaded(true);
     }
     loadData();
-  }, [user]);
+  }, [user, supabase]);
 
   // Calculations
   const mrr = metrics.mrr || 0;
@@ -106,7 +106,7 @@ export default function FinancialMetricsPage() {
         .limit(1)
         .single();
 
-      const existingSnapshot = (latestReport?.financial_snapshot as any) || {};
+      const existingSnapshot = (latestReport?.financial_snapshot as Record<string, any>) || {};
       const newSnapshot = {
         ...existingSnapshot,
         metrics,

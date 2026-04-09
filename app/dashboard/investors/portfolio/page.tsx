@@ -18,7 +18,7 @@ type InvestorMatch = {
 export default function VCMatcherPage() {
   const { user } = useAuth();
   const [investors, setInvestors] = useState<InvestorMatch[]>([]);
-  const [startupProfile, setStartupProfile] = useState<any>(null);
+  const [startupProfile, setStartupProfile] = useState<Record<string, any> | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const supabase = createClient();
   
@@ -81,7 +81,7 @@ export default function VCMatcherPage() {
     }
 
     loadState();
-  }, [user]);
+  }, [user, supabase]);
 
   const generateDraft = (vc: InvestorMatch) => {
     setSelectedVC(vc);
