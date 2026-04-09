@@ -180,8 +180,8 @@ export default function InvestorDashboard() {
                          </p>
                       </div>
                       <div className="flex gap-2">
-                         {s.integrations.includes('plaid') && <ShieldCheck className="w-4 h-4 text-emerald-500" title="Cash Verified" />}
-                         {s.integrations.includes('linkedin') && <Globe className="w-4 h-4 text-emerald-500" title="Team Verified" />}
+                         {s.integrations.includes('plaid') && <ShieldCheck className="w-4 h-4 text-emerald-500" aria-label="Cash Verified" />}
+                         {s.integrations.includes('linkedin') && <Globe className="w-4 h-4 text-emerald-500" aria-label="Team Verified" />}
                       </div>
                    </div>
 
