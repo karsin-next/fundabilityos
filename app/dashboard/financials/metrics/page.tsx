@@ -7,7 +7,7 @@ import { ModuleHeader } from "@/components/ModuleHeader";
 import { 
   ArrowRight, ArrowLeft,
   Check, DollarSign, TrendingUp, Calculator,
-  CheckCircle2, Plus, X, BarChart, PieChart, Layers
+  CheckCircle2, Plus, X, BarChart, PieChart, Layers, Activity
 } from "lucide-react";
 import Link from "next/link";
 import { 
