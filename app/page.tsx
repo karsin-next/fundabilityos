@@ -554,7 +554,7 @@ export default function HomePage() {
                     <AlertCircle size={16} className="text-[#ef4444]" /> Critical Gaps
                   </h4>
                   <div className="space-y-6">
-                    {scoringResult.top_3_gaps.map((gap, i) => (
+                    {scoringResult.top_3_gaps.map((gap: any, i: number) => (
                       <div key={i} className="border-l-4 border-[#ef4444] pl-6 py-1 bg-white/5 p-4 rounded-r-md">
                          <div className="text-[11px] font-black text-white uppercase tracking-widest mb-2">{gap.dimension}</div>
                          <p className="text-white/60 text-xs leading-relaxed font-medium">{gap.explanation}</p>
@@ -570,7 +570,7 @@ export default function HomePage() {
                     <TrendingUp size={16} className="text-[#10b981]" /> High Interest Signals
                   </h4>
                   <div className="space-y-4">
-                    {scoringResult.investor_loves.map((love, i) => (
+                    {scoringResult.investor_loves.map((love: any, i: number) => (
                       <div key={i} className="flex items-start gap-3 p-4 bg-[#022f42]/50 border border-white/5 rounded-sm">
                          <CheckCircle2 size={14} className="text-[#10b981] mt-0.5 shrink-0" />
                          <span className="text-white text-xs font-medium leading-relaxed">{love}</span>
