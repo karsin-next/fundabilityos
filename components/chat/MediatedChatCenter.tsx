@@ -61,8 +61,8 @@ export default function MediatedChatCenter({ chatId, recipientName, recipientRol
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages", filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+        (payload: { new: Record<string, unknown> }) => {
+          setMessages((prev) => [...prev, payload.new as unknown as Message]);
         }
       )
       .subscribe();
