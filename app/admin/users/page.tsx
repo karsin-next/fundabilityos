@@ -52,11 +52,11 @@ export default function UserManagementPage() {
     // In a real app, you'd use a service role or an admin API to delete from auth.users too.
     const { error } = await supabase.from("profiles").delete().eq("id", id);
     if (!error) {
-      setUsers(users.filter(u => u.id !== id));
+      setUsers(users.filter((u: Profile) => u.id !== id));
     }
   }
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter((user: Profile) => 
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.company_name?.toLowerCase().includes(searchTerm.toLowerCase())

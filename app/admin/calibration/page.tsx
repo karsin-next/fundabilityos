@@ -42,7 +42,7 @@ export default function CalibrationPage() {
 
     if (data) {
       setPrompts(data);
-      setActivePrompt(data.find(p => p.is_active) || data[0]);
+      setActivePrompt(data.find((p: PromptVersion) => p.is_active) || data[0]);
     }
     setLoading(false);
   }

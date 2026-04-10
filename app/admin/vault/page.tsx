@@ -58,7 +58,7 @@ export default function PatternVaultPage() {
   
   const filteredBenchmarks = activeRegion === "All" 
     ? benchmarks 
-    : benchmarks.filter(b => b.region === activeRegion);
+    : benchmarks.filter((b: Benchmark) => b.region === activeRegion);
 
   return (
     <div className="space-y-10 pb-20">
