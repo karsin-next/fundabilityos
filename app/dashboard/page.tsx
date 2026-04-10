@@ -88,9 +88,11 @@ export default function AuditHubPage() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-2 h-8 bg-[#ffd800]" />
-            <h1 className="text-4xl font-black text-[#022f42] uppercase tracking-tighter leading-none">Command Center</h1>
+            <h1 className="text-4xl font-black text-[#022f42] uppercase tracking-tighter leading-none">360° Fundability Audit Overview</h1>
           </div>
-          <p className="text-sm font-medium text-[#1e4a62]/60 uppercase tracking-widest">360° Institutional Fundability Audit • V4.2 Protocol</p>
+          <p className="text-sm font-bold text-[#1e4a62]/60 leading-relaxed max-w-2xl">
+            Start measuring exactly where you stand through an investor&apos;s lens. Complete these 8 core diagnostics to establish your baseline fundability score and identify critical gaps.
+          </p>
         </div>
         <div className="flex gap-4">
            <Link href="/dashboard/score" className="btn btn-ghost-dark btn-sm border-[#022f42]/10">

@@ -6,16 +6,40 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { history } = await req.json();
+    const { history, deckContext } = await req.json();
 
     if (!history || !Array.isArray(history)) {
       return NextResponse.json({ error: "Valid history array is required" }, { status: 400 });
     }
 
     const anthropic = getAnthropicClient();
-    const promptContext = history.length === 0 
-      ? "This is a brand new interview. Start by asking for the company name and what problem they solve."
-      : "Here is the founder's answer history so far:\n" + JSON.stringify(history, null, 2);
+    
+    // 1. Prompt Registry Check (A/B Testing Layer)
+    // In a full implementation, we'd query the DB for the active 'interview' prompt version.
+    // For now, we use the default and attach a version header.
+    const PROMPT_VERSION = "v4.2.0-baseline";
+    const systemPrompt = DYNAMIC_TREE_SYSTEM_PROMPT;
+
+    // 2. Build the dynamic prompt context
+    let promptContext = "";
+    
+    // Check for deck context provided by the scanner
+    if (deckContext && Object.keys(deckContext).length > 0) {
+      promptContext += "PRE-EXTRACTED DATA FROM PITCH DECK:\n" + JSON.stringify(deckContext, null, 2) + "\n\n";
+      promptContext += "INSTRUCTION: Do NOT ask questions already answered in the pitch deck above. Focus on the MISSING dimensions.\n\n";
+    }
+
+    if (history.length === 0) {
+      if (deckContext && Object.keys(deckContext).length > 0) {
+        promptContext += "Start: Acknowledge deck data and jump to the most critical missing fundability data point.";
+      } else {
+        promptContext += "Start: This is a brand new company. Ask for their name and core mission.";
+      }
+    } else {
+      // Add 'Reasoning Trace' request for internal auditing
+      promptContext += "INTERNAL AUDIT MODE: Include a hidden <thinking> tag explaining your choice of the next question.\n\n";
+      promptContext += "HISTORY:\n" + JSON.stringify(history, null, 2);
+    }
 
     // Create a TransformStream to pipe Claude's output to the client
     const encoder = new TextEncoder();
@@ -26,9 +50,13 @@ export async function POST(req: NextRequest) {
             model: MODELS.CHAT,
             max_tokens: 1500,
             temperature: 0.1,
-            system: DYNAMIC_TREE_SYSTEM_PROMPT,
+            system: systemPrompt,
             messages: [{ role: "user", content: promptContext }],
           });
+
+          // Log Reasoning Trace start (Telemetry)
+          console.log(`[AI-Trace] Version: ${PROMPT_VERSION} | History Length: ${history.length}`);
+
 
           for await (const chunk of anthropicStream) {
             if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {

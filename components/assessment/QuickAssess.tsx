@@ -47,11 +47,18 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
     setShowCustomInput(false);
     setCustomInput("");
 
+    // Load Pitch Deck Context if available
+    const deckContextRaw = localStorage.getItem("PITCH_DECK_CONTEXT");
+    const deckContext = deckContextRaw ? JSON.parse(deckContextRaw) : null;
+
     try {
       const res = await fetch("/api/interview/tree", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: currentHistory }),
+        body: JSON.stringify({ 
+          history: currentHistory,
+          deckContext: deckContext 
+        }),
       });
       
       if (!res.ok) throw new Error("Failed to load next question");

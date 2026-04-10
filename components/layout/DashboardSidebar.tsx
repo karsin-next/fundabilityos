@@ -35,7 +35,7 @@ const siteMap: NavSection[] = [
     label: "1. DIAGNOSE – Establish Baseline",
     items: [
       {
-        name: "1.1 360° Fundability Audit",
+        name: "1.1 360°  Fundability Audit Overview",
         href: "/dashboard",
         icon: Zap,
         children: [
@@ -288,7 +288,7 @@ export function DashboardSidebar() {
                 <button 
                   onClick={() => !section.isLocked && toggleSection(section.label)}
                   disabled={section.isLocked}
-                  className={`w-full px-4 mb-1 flex items-center justify-between group ${
+                  className={`w-full px-2.5 mb-1 flex items-center justify-between group ${
                     section.isLocked ? "cursor-not-allowed opacity-50" : ""
                   }`}
                 >

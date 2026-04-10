@@ -82,7 +82,9 @@ export default function UploadPage() {
       setProgress(100);
 
       // New API returns extracted_data directly — no polling needed
+      // Store extraction context for the AI Interview to skip redundant questions
       if (result.extracted_data) {
+        localStorage.setItem("PITCH_DECK_CONTEXT", JSON.stringify(result.extracted_data));
         setExtracted(result.extracted_data);
         setUploadState("done");
         return;
