@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
+  Users,
   Search, 
   MoreVertical, 
   Edit2, 
@@ -13,7 +14,8 @@ import {
   Filter,
   Download,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  BarChart3
 } from "lucide-react";
 
 interface Profile {
