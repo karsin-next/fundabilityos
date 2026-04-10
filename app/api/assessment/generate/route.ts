@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { DYNAMIC_MODULE_SYSTEM_PROMPT } from "@/lib/prompts";
 
+interface PreviousAnswer {
+  questionTitle: string;
+  selectedOptionLabel: string;
+  openText: string;
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -24,7 +30,7 @@ export async function POST(req: Request) {
 
     if (previousAnswers && previousAnswers.length > 0) {
       promptContent += "PREVIOUS ANSWERS IN THIS MODULE SEQUENCE:\n";
-      previousAnswers.forEach((ans: any, i: number) => {
+      previousAnswers.forEach((ans: PreviousAnswer, i: number) => {
         promptContent += `\nQuestion ${i + 1}: ${ans.questionTitle}`;
         promptContent += `\nSelected Option: ${ans.selectedOptionLabel}`;
         promptContent += `\nOpen Text Context: "${ans.openText}"\n`;
@@ -50,7 +56,7 @@ export async function POST(req: Request) {
     const parsed = JSON.parse(cleanJson);
 
     return NextResponse.json(parsed);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Generation Error:", error);
     return NextResponse.json(
       { error: "Failed to generate dynamic question." },
