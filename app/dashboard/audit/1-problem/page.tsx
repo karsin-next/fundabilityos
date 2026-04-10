@@ -1,11 +1,11 @@
 "use client";
 
-import { PredictiveAuditQuestion } from "@/components/assessment/PredictiveAuditQuestion";
+import { DynamicAuditComponent } from "@/components/assessment/DynamicAuditComponent";
 import { Lightbulb, ArrowLeft, Target, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function ProblemDiagnosticPage() {
-  const problemOptions = [
+  const initialSeedOptions = [
     { id: "opt-1", label: "Critical Operational Failure (System-critical, high cost of inaction)", value: 90 },
     { id: "opt-2", label: "Inefficiency / Slow Workflow (Moderate friction, manageable cost)", value: 60 },
     { id: "opt-3", label: "Compliance or Regulatory Pressure (Legally required change)", value: 75 },
@@ -33,12 +33,15 @@ export default function ProblemDiagnosticPage() {
       </div>
 
       <div className="space-y-8">
-        <PredictiveAuditQuestion
+        <DynamicAuditComponent
           moduleId="1-problem"
-          questionTitle="What is the primary 'Pain Trigger' that forces your customer to seek a solution today?"
-          options={problemOptions}
-          placeholder="Describe the specific scenario where this pain occurs. What is the observable 'broken' process or emotional frustration?"
-          onSave={(data) => console.log("Problem diagnostic saved", data)}
+          moduleContext="The Problem Diagnostic - identifying the fundamental Pain Trigger, impact, and frequency."
+          maxQuestions={5}
+          initialQuestion={{
+            questionTitle: "What is the primary 'Pain Trigger' that forces your customer to seek a solution today?",
+            options: initialSeedOptions,
+            placeholder: "Describe the specific scenario where this pain occurs. What is the observable 'broken' process or emotional frustration?"
+          }}
         />
 
         {/* Supporting Context Cards */}

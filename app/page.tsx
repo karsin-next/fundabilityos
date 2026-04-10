@@ -484,6 +484,17 @@ export default function HomePage() {
               {scoringResult && (
                     <div className="results-dashboard animate-in fade-in slide-in-from-bottom-4 duration-700 text-left w-full mt-8">
                        <div className="bg-[#022f42] p-8 md:p-12 relative overflow-hidden group shadow-2xl rounded-md border border-white/10 mx-auto w-full max-w-[1000px]">
+            {/* Close / Back to Home Button */}
+            <button 
+              onClick={() => {
+                setScoringResult(null);
+                setShowAssessment(false);
+              }}
+              className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all z-20"
+              title="Close Results and Return Home"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
             {/* Header Area: Score Gauge */}
             <div className="flex flex-col items-center mb-12">
                <div className="relative mb-8">

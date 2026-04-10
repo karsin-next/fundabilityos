@@ -13,13 +13,13 @@ import { createClient } from "@/lib/supabase/client";
 
 const subModules = [
   { id: "1-problem", title: "The Problem Diagnostic", icon: Target, desc: "Are you solving a real, painful problem?", status: "not_started", time: "3 min" },
-  { id: "2-customer", title: "Customer Clarity Scan", icon: Users, desc: "Who exactly is your early adopter?", status: "locked", time: "4 min" },
-  { id: "3-competitor", title: "Competitive Positioning", icon: ShieldCheck, desc: "Where is your white space?", status: "locked", time: "5 min" },
-  { id: "4-product", title: "Product Readiness", icon: PlayCircle, desc: "Stage of development & uniqueness.", status: "locked", time: "2 min" },
-  { id: "5-market", title: "Market Opportunity Sizer", icon: Globe, desc: "TAM/SAM/SOM and timing.", status: "locked", time: "4 min" },
-  { id: "6-pmf", title: "Product-Market Fit Probe", icon: TrendingUp, desc: "Vitamin vs. Painkiller analysis.", status: "locked", time: "3 min" },
-  { id: "7-revenue", title: "Revenue Model Explorer", icon: BarChart3, desc: "Pricing power and margins.", status: "locked", time: "4 min" },
-  { id: "8-team", title: "Team Composition Audit", icon: Users, desc: "Founding team strength and gaps.", status: "locked", time: "3 min" },
+  { id: "2-customer", title: "Customer Clarity Scan", icon: Users, desc: "Who exactly is your early adopter?", status: "not_started", time: "4 min" },
+  { id: "3-competitor", title: "Competitive Positioning", icon: ShieldCheck, desc: "Where is your white space?", status: "not_started", time: "5 min" },
+  { id: "4-product", title: "Product Readiness", icon: PlayCircle, desc: "Stage of development & uniqueness.", status: "not_started", time: "2 min" },
+  { id: "5-market", title: "Market Opportunity Sizer", icon: Globe, desc: "TAM/SAM/SOM and timing.", status: "not_started", time: "4 min" },
+  { id: "6-pmf", title: "Product-Market Fit Probe", icon: TrendingUp, desc: "Vitamin vs. Painkiller analysis.", status: "not_started", time: "3 min" },
+  { id: "7-revenue", title: "Revenue Model Explorer", icon: BarChart3, desc: "Pricing power and margins.", status: "not_started", time: "4 min" },
+  { id: "8-team", title: "Team Composition Audit", icon: Users, desc: "Founding team strength and gaps.", status: "not_started", time: "3 min" },
 ];
 
 export default function AuditHubPage() {
@@ -48,20 +48,11 @@ export default function AuditHubPage() {
         
         const updatedModules = subModules.map((m) => {
           const isCompleted = completedModuleIds.has(m.id);
-          // Unlock modules logically: Problem must be done for others, or just based on payment
-          // For now, let's just mark status.
           return {
             ...m,
-            status: isCompleted ? "completed" : (m.id === "1-problem" ? "not_started" : "locked")
+            status: isCompleted ? "completed" : "not_started"
           };
         });
-
-        // Simple chain unlock: if previous is complete, unlock next
-        for (let i = 1; i < updatedModules.length; i++) {
-           if (updatedModules[i-1].status === "completed" && updatedModules[i].status === "locked") {
-              updatedModules[i].status = "not_started";
-           }
-        }
 
         setModules(updatedModules);
       } catch (err) {

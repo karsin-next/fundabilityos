@@ -138,7 +138,6 @@ const siteMap: NavSection[] = [
   },
   {
     label: "3. ACCELERATE – Closing Gaps",
-    isLocked: true,
     items: [
       {
         name: "3.1 Gap Closure Workbench",
@@ -172,7 +171,6 @@ const siteMap: NavSection[] = [
   },
   {
     label: "4. MASTER – Advanced Topics",
-    isLocked: true,
     items: [
       {
         name: "4.1 Term Sheet Mastery",
@@ -349,7 +347,7 @@ export function DashboardSidebar() {
                         </Link>
 
                         {/* Sub-items (level 2) */}
-                        {item.children && childActive && (
+                        {item.children && (active || childActive) && (
                           <div className="ml-3 mt-1 mb-2 border-l border-[#1b4f68]/60 pl-2 space-y-0.5">
                             {item.children.map((child: NavItem) => {
                               const childIsActive = isActive(child.href);
