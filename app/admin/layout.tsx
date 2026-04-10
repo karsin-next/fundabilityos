@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { redirect } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, BarChart3, Settings, ShieldCheck, Database, LogOut, ChevronRight } from "lucide-react";
+import { Users, BarChart3, Settings, ShieldCheck, Database, LogOut, ChevronRight, Zap } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
