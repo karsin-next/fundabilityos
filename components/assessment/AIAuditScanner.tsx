@@ -7,7 +7,7 @@ import Link from "next/link";
 export function AIAuditScanner({ onComplete }: { onComplete?: () => void }) {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [scanStatus, setScanStatus] = useState<"IDLE" | "SCANNING" | "COMPLETE" | "PAYWALL">("IDLE");
+  const [scanStatus, setScanStatus] = useState<"IDLE" | "SCANNING" | "COMPLETE">("IDLE");
   const [progress, setProgress] = useState(0);
   const [metricsExtracted, setMetricsExtracted] = useState<string[]>([]);
   
@@ -64,51 +64,15 @@ export function AIAuditScanner({ onComplete }: { onComplete?: () => void }) {
 
   useEffect(() => {
     if (scanStatus === "COMPLETE") {
-      setTimeout(() => setScanStatus("PAYWALL"), 2500);
+      // Auto-trigger onComplete after a brief visual confirmation
+      const timer = setTimeout(() => {
+        if (onComplete) onComplete();
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [scanStatus]);
+  }, [scanStatus, onComplete]);
 
-  if (scanStatus === "PAYWALL") {
-    return (
-      <div className="glass-premium p-10 relative overflow-hidden transition-all animate-in fade-in zoom-in duration-700">
-        <div className="absolute -top-10 -right-10 w-48 h-48 bg-[#ffd800] rounded-full opacity-10 blur-[80px]"></div>
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#ffd800] rounded-full opacity-5 blur-[80px]"></div>
-        
-        <div className="flex flex-col items-center text-center relative z-10">
-          <div className="w-20 h-20 bg-white shadow-2xl rounded-sm flex items-center justify-center mb-8 relative border-b-4 border-[#ffd800]">
-            <Lock className="w-8 h-8 text-[#022f42]" />
-          </div>
-          <h3 className="text-3xl font-black text-white tracking-tighter mb-4 uppercase leading-none">Extraction <br/><span className="text-gradient">Finalized.</span></h3>
-          <p className="text-sm font-medium text-white/50 mb-10 max-w-sm leading-relaxed">
-            Neural sync completed. 41 data points identified across 8 dimensions. Unlock the full Alpha Report to sync with your dashboard.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl">
-             <Link href="/checkout" className="flex flex-col bg-white p-7 hover:scale-[1.02] transition-transform shadow-2xl group border-b-4 border-transparent hover:border-[#ffd800]">
-                <span className="text-[10px] font-black uppercase text-[#022f42]/40 mb-2 tracking-widest">Standard Unlock</span>
-                <span className="text-3xl font-black text-[#022f42] mb-6 tracking-tighter">$29</span>
-                <div className="mt-auto bg-[#022f42] text-white py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-[#1b4f68]">
-                   Access Report <ArrowRight size={14}/>
-                </div>
-             </Link>
-             
-             <Link href="/checkout" className="flex flex-col bg-[#ffd800] p-7 hover:scale-[1.02] transition-transform shadow-2xl relative group border-b-4 border-[#022f42]">
-                <div className="absolute -top-2 -right-2 bg-[#022f42] text-white px-3 py-1 text-[9px] font-black uppercase tracking-widest">Recommended</div>
-                <span className="text-[10px] font-black uppercase text-[#022f42]/60 mb-2 tracking-widest">V4 Pro Growth</span>
-                <span className="text-3xl font-black text-[#022f42] mb-6 tracking-tighter">$59<span className="text-sm">/mo</span></span>
-                <div className="mt-auto bg-[#022f42] text-white py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-[#1b4f68]">
-                   Upgrade Plan <ArrowRight size={14}/>
-                </div>
-             </Link>
-          </div>
 
-          <button onClick={() => setScanStatus("IDLE")} className="text-[10px] text-gray-400 font-bold uppercase tracking-widest hover:text-gray-600 mt-8">
-            Discard AI Sync
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div 
@@ -180,36 +144,7 @@ export function AIAuditScanner({ onComplete }: { onComplete?: () => void }) {
                 )}
               </div>
 
-              {/* Paywall Card Overlay (Floating) */}
-              {scanStatus === "COMPLETE" && (
-                <div className="absolute inset-x-0 -bottom-10 flex items-center justify-center z-20 px-4 transition-all animate-in zoom-in duration-500">
-                  <div className="bg-white border-2 border-[#022f42] p-8 shadow-[0_40px_80px_-20px_rgba(2,47,66,0.3)] rounded-sm w-full max-w-sm flex flex-col items-center">
-                    <div className="w-12 h-12 bg-[#022f42] rounded-full flex items-center justify-center mb-4">
-                      <Lock className="w-6 h-6 text-[#ffd800]" />
-                    </div>
-                    <h4 className="text-lg font-black text-[#022f42] uppercase tracking-tight mb-2 text-center">Sync Sequence Locked</h4>
-                    <p className="text-[11px] font-medium text-gray-500 text-center mb-6 leading-relaxed">
-                      Institutional Gap Analysis & Automated Module Syncing. Upgrade to V4 Pro to deploy these results.
-                    </p>
-                    
-                    <div className="grid grid-cols-2 gap-3 w-full">
-                       <Link href="/checkout" className="flex flex-col items-center bg-white border-2 border-[#022f42] px-3 py-4 hover:bg-gray-50 transition-colors group">
-                          <span className="text-[11px] font-black text-[#022f42] mb-1">$29</span>
-                          <span className="text-[8px] font-black uppercase text-gray-400">Unlock Report</span>
-                       </Link>
-                       <Link href="/checkout" className="flex flex-col items-center bg-[#022f42] px-3 py-4 hover:bg-[#1b4f68] transition-colors group relative">
-                          <div className="absolute -top-3 right-0 bg-[#ffd800] text-[#022f42] px-2 py-0.5 text-[8px] font-black uppercase tracking-tighter">Recommended</div>
-                          <span className="text-[11px] font-black text-white mb-1">$59/mo</span>
-                          <span className="text-[8px] font-black uppercase text-[#90cdf4]">V4 Pro</span>
-                       </Link>
-                    </div>
-                    
-                    <button onClick={() => setScanStatus("IDLE")} className="mt-8 text-[9px] font-bold text-gray-300 uppercase tracking-widest hover:text-gray-500 transition-colors">
-                       Clear and start over
-                    </button>
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
         )}
