@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAnthropicClient } from "@/lib/ai";
+import { sendTelegramAlert } from "@/lib/telegram";
 
 // Admin-only key check would happen here in production
 export async function POST(req: NextRequest) {
@@ -69,6 +70,23 @@ export async function POST(req: NextRequest) {
         status: precisionDelta > 15 ? "BIAS_DETECTED" : "CALIBRATED"
       };
     });
+
+    // 4. Send Telegram Alert for Bias Detection
+    const biasResults = results.filter((r: any) => r.status === "BIAS_DETECTED");
+    if (biasResults.length > 0) {
+      const avgDelta = results.reduce((acc: number, r: any) => acc + r.precisionDelta, 0) / results.length;
+      const message = `
+<b>🚨 BIAS DETECTED: FundabilityOS Calibration</b>
+<b>Batch:</b> ${results.length} Profiles
+<b>Benchmark:</b> ${benchmark.name} (${benchmark.region})
+<b>Drifts Found:</b> ${biasResults.length}
+<b>Avg Precision Delta:</b> ${avgDelta.toFixed(1)} pts
+<b>Status:</b> NEURAL_CALIBRATION_REQUIRED
+
+<i>Check the Command Center for details.</i>`;
+      
+      await sendTelegramAlert(message);
+    }
     
     return NextResponse.json({ 
       success: true, 
