@@ -65,7 +65,7 @@ export default function AuditHubPage() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case "completed": return "bg-green-100 text-green-700 border-green-200";
+      case "completed": return "bg-green-50/30 text-green-700 border-[#ffd800]/60 shadow-[0_10px_30px_-10px_rgba(255,216,0,0.15)] ring-1 ring-[#ffd800]/20";
       case "in_progress": return "bg-[#ffd800] text-[#022f42] border-[#ffd800]";
       case "not_started": return "bg-white text-[#022f42] border-[rgba(2,47,66,0.15)] hover:border-[#022f42]";
       default: return "bg-[#f2f6fa] text-[#1e4a62] border-[rgba(2,47,66,0.05)] opacity-60";
@@ -209,6 +209,14 @@ export default function AuditHubPage() {
               href={href} 
               className={`group block p-7 border-2 transition-all duration-300 relative ${getStatusColor(mod.status)} ${isLocked ? "cursor-not-allowed grayscale" : "hover:border-[#022f42] hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(2,47,66,0.1)]"}`}
             >
+               {mod.status === "completed" && (
+                 <div className="absolute top-4 right-4 animate-in zoom-in-50 duration-500">
+                   <div className="bg-[#ffd800] text-[#022f42] text-[8px] font-black px-2 py-1 uppercase tracking-widest shadow-lg flex items-center gap-1 leading-none">
+                     <CheckCircle2 size={10} strokeWidth={3} /> Verified
+                   </div>
+                 </div>
+               )}
+
                {mod.status === "in_progress" && (
                  <span className="absolute -top-2 -right-2 flex h-5 w-5">
                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#022f42] opacity-75"></span>

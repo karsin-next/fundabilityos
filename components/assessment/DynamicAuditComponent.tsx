@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, MessageSquare, Sparkles, Save, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, MessageSquare, Sparkles, Save, Loader2, TrendingUp, AlertTriangle, ArrowRight, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Option {
@@ -22,6 +22,15 @@ interface CompletedAnswer {
   selectedOptionLabel: string;
   openText: string;
   scoreValue: number;
+}
+
+interface InvestorAnalysis {
+  overallSignal: "strong" | "moderate" | "weak";
+  investorTake: string;
+  strengths: string[];
+  redFlags: string[];
+  nextAction: string;
+  score: number;
 }
 
 interface DynamicAuditComponentProps {
@@ -52,6 +61,50 @@ export function DynamicAuditComponent({
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [analysis, setAnalysis] = useState<InvestorAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // 1. Check for existing response on mount
+  useEffect(() => {
+    async function checkExisting() {
+      setIsInitialLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsInitialLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("audit_responses")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("module_id", moduleId)
+          .single();
+
+        if (data && data.open_text) {
+          const parsed = JSON.parse(data.open_text);
+          // If the stored data contains an analysis object, use it
+          if (parsed.analysis) {
+            setAnalysis(parsed.analysis);
+            setAnswers(parsed.answers || []);
+            setSavedStatus("success");
+          } else if (Array.isArray(parsed)) {
+            // Legacy format or just answers, we can still show as success but might need to re-analyze
+            setAnswers(parsed);
+            setSavedStatus("success");
+            // Optionally trigger analysis here if needed
+          }
+        }
+      } catch (e) {
+        console.error("Error checking existing response:", e);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    }
+    checkExisting();
+  }, [moduleId, supabase]);
 
   const currentQ = questions[currentIndex];
   const currentA = answers[currentIndex] || {};
@@ -166,10 +219,40 @@ export function DynamicAuditComponent({
       }
 
       setSavedStatus("success");
-      // Redirect back to hub after a short delay
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 2500);
+
+      // Fetch investor analysis
+      setIsAnalyzing(true);
+      try {
+        const completedAnswers = answers.filter(a => a.selectedOptionId);
+        const res = await fetch("/api/assessment/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moduleContext, answers: completedAnswers })
+        });
+        if (res.ok) {
+          const data = await res.json() as InvestorAnalysis;
+          setAnalysis(data);
+
+          // Update the record with the analysis included for future recall
+          if (user) {
+            const finalScore = answers.reduce((acc, a) => acc + (a.scoreValue || 0), 0) / maxQuestions;
+            await supabase
+              .from("audit_responses")
+              .upsert({
+                user_id: user.id,
+                module_id: moduleId,
+                selected_option: "DYNAMIC_CHAIN",
+                open_text: JSON.stringify({ answers: completedAnswers, analysis: data }),
+                score_value: Math.round(finalScore),
+                updated_at: new Date().toISOString()
+              }, { onConflict: "user_id,module_id" });
+          }
+        }
+      } catch (e) {
+        console.error("Analysis fetch failed:", e);
+      } finally {
+        setIsAnalyzing(false);
+      }
     } catch (err) {
       console.error("Save failed:", err);
       setSavedStatus("error");
@@ -177,6 +260,23 @@ export function DynamicAuditComponent({
       setIsSaving(false);
     }
   };
+
+  // Handlers for retaking
+  const handleRetake = () => {
+    setSavedStatus("idle");
+    setAnalysis(null);
+    setCurrentIndex(0);
+    setAnswers(Array.from({ length: maxQuestions }, () => ({})));
+  };
+
+  if (isInitialLoading) {
+    return (
+      <div className="bg-white border-2 border-[#022f42]/5 shadow-[0_20px_50px_-15px_rgba(2,47,66,0.05)] p-20 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#022f42]/10 border-t-[#ffd800] rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 animate-pulse">Syncing Audit State...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border-2 border-[#022f42]/5 shadow-[0_20px_50px_-15px_rgba(2,47,66,0.05)] overflow-hidden">
@@ -230,15 +330,107 @@ export function DynamicAuditComponent({
            </p>
         </div>
       ) : savedStatus === "success" ? (
-        <div className="p-8 md:p-14 flex flex-col items-center justify-center min-h-[400px] text-center">
-           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
-             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
-           </div>
-           <h2 className="text-2xl font-black text-[#022f42] uppercase tracking-tight mb-2">Module Captured</h2>
-           <p className="text-sm font-medium text-[#1e4a62] max-w-sm mx-auto mb-6">
-             Your responses have been mapped into your diagnostic index. Returning to hub...
-           </p>
-           <div className="w-6 h-6 border-2 border-[#022f42]/20 border-t-[#ffd800] rounded-full animate-spin" />
+        <div className="p-8 md:p-12">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-14 h-14 bg-emerald-100 rounded-sm flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 mb-1">Module Captured</div>
+              <h2 className="text-2xl font-black text-[#022f42] uppercase tracking-tight">Investor Signal Analysis</h2>
+            </div>
+          </div>
+
+          {isAnalyzing ? (
+            <div className="flex flex-col items-center py-12">
+              <div className="w-10 h-10 border-4 border-[#022f42]/10 border-t-[#ffd800] rounded-full animate-spin mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 animate-pulse">FundabilityOS at work...</p>
+            </div>
+          ) : analysis ? (
+            <div className="space-y-6">
+              {/* Signal Badge + Score */}
+              <div className={`flex items-center justify-between p-5 border-2 ${
+                analysis.overallSignal === "strong" ? "border-emerald-200 bg-emerald-50" :
+                analysis.overallSignal === "moderate" ? "border-[#ffd800]/40 bg-[#ffd800]/5" :
+                "border-red-200 bg-red-50"
+              }`}>
+                <div>
+                  <div className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 mb-1">Investor Signal</div>
+                  <div className={`text-xl font-black uppercase tracking-tight ${
+                    analysis.overallSignal === "strong" ? "text-emerald-700" :
+                    analysis.overallSignal === "moderate" ? "text-amber-600" :
+                    "text-red-600"
+                  }`}>{analysis.overallSignal === "strong" ? "✓ Strong" : analysis.overallSignal === "moderate" ? "⚡ Moderate" : "✗ Needs Work"}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 mb-1">Module Score</div>
+                  <div className="text-4xl font-black text-[#022f42]">{analysis.score}<span className="text-lg text-[#022f42]/30">/100</span></div>
+                </div>
+              </div>
+
+              {/* Investor Take */}
+              <div className="bg-[#022f42] p-6">
+                <div className="text-[9px] font-black uppercase tracking-widest text-[#ffd800] mb-3">Investor Perspective</div>
+                <p className="text-sm font-medium text-[#b0d0e0] leading-relaxed">{analysis.investorTake}</p>
+              </div>
+
+              {/* Strengths + Red Flags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 border-2 border-emerald-100 bg-emerald-50/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-700">Strengths</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysis.strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs font-medium text-[#022f42]/70">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="p-5 border-2 border-red-100 bg-red-50/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-red-600">Watch Points</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysis.redFlags.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs font-medium text-[#022f42]/70">
+                        <span className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0 font-black">!</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Next Action */}
+              <div className="p-5 border-l-4 border-[#ffd800] bg-[#ffd800]/5">
+                <div className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 mb-2">Recommended Next Action</div>
+                <p className="text-sm font-bold text-[#022f42]">{analysis.nextAction}</p>
+              </div>
+
+              {/* CTA Back */}
+              <div className="pt-4 flex justify-between items-center">
+                <button
+                  onClick={handleRetake}
+                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 hover:text-[#022f42] transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" /> Retake Audit
+                </button>
+                <a href="/dashboard" className="flex items-center gap-2 bg-[#022f42] text-[#ffd800] px-8 py-4 font-black text-[10px] uppercase tracking-widest hover:bg-[#ffd800] hover:text-[#022f42] transition-colors">
+                  Back to Audit Hub <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <a href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/50 hover:text-[#022f42]">← Back to Hub</a>
+            </div>
+          )}
         </div>
       ) : savedStatus === "error" ? (
         <div className="p-8 md:p-14 flex flex-col items-center justify-center min-h-[400px] text-center">

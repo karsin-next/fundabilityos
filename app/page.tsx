@@ -237,22 +237,29 @@ export default function HomePage() {
   const [showAssessment, setShowAssessment] = useState(false);
   const [scoringResult, setScoringResult] = useState<Record<string, any> | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const CACHE_KEY = user?.id ? `FUNDABILITY_QA_${user.id}` : "FUNDABILITY_QA_GUEST";
   const supabase = createClient();
 
   // Sync state between LocalStorage and Supabase
   useEffect(() => {
     async function hydrateScore() {
-      // 1. Check LocalStorage (Fastest)
-      const cached = localStorage.getItem("FUNDABILITY_QA_LATEST");
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          setScoringResult(parsed);
-          setShowAssessment(true);
-        } catch (e) {}
+      // 1. If NOT authenticated, check Guest Cache (Do not auto-show for guests to prevent "stuck" feeling)
+      if (!user) {
+        const guestCached = localStorage.getItem("FUNDABILITY_QA_GUEST");
+        if (guestCached) {
+          try {
+            const parsed = JSON.parse(guestCached);
+            setScoringResult(parsed);
+            // We don't auto-set setShowAssessment(true) here for guests
+            // so they can still see the main landing page hero.
+          } catch (e) {}
+        } else {
+          setScoringResult(null);
+          setShowAssessment(false);
+        }
       }
 
-      // 2. If authenticated, sync with Supabase
+      // 2. If authenticated, sync with Supabase (source of truth)
       if (user?.id) {
         const { data, error } = await supabase
           .from("reports")
@@ -265,8 +272,20 @@ export default function HomePage() {
           const latestReport = data[0];
           setScoringResult(latestReport);
           setShowAssessment(true);
-          // Update LocalStorage to keep in sync
-          localStorage.setItem("FUNDABILITY_QA_LATEST", JSON.stringify(latestReport));
+          localStorage.setItem(`FUNDABILITY_QA_${user.id}`, JSON.stringify(latestReport));
+        } else {
+          // Check user-specific local cache if no DB report
+          const userCached = localStorage.getItem(`FUNDABILITY_QA_${user.id}`);
+          if (userCached) {
+            try {
+              const parsed = JSON.parse(userCached);
+              setScoringResult(parsed);
+              setShowAssessment(true);
+            } catch (e) {}
+          } else {
+            setScoringResult(null);
+            setShowAssessment(false);
+          }
         }
       }
       setIsHydrated(true);
@@ -277,10 +296,8 @@ export default function HomePage() {
 
   const handleComplete = async (result: Record<string, any>) => {
     setScoringResult(result);
-    // Persist to LocalStorage
-    localStorage.setItem("FUNDABILITY_QA_LATEST", JSON.stringify(result));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(result));
 
-    // If authenticated, save to Supabase via API
     if (user?.id) {
       try {
         await fetch("/api/reports/save", {
@@ -288,13 +305,12 @@ export default function HomePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...result, user_id: user.id })
         });
-      } catch (e) {
-        console.error("Failed to sync report to Supabase", e);
-      }
+      } catch (e) {}
     }
   };
 
   const handleReset = () => {
+    localStorage.removeItem(CACHE_KEY);
     localStorage.removeItem("FUNDABILITY_QA_LATEST");
     setScoringResult(null);
     setShowAssessment(false);
@@ -313,10 +329,10 @@ export default function HomePage() {
         style={{ paddingTop: "clamp(4rem, 8vw, 6.5rem)", paddingBottom: "clamp(4rem, 8vw, 6.5rem)", minHeight: "92vh", display: "flex", alignItems: "center" }}
       >
         <div className="container">
-          <div
+            <div
             style={{
               display: "grid",
-              gridTemplateColumns: scoringResult ? "1fr" : "1fr 1fr",
+              gridTemplateColumns: (scoringResult && showAssessment) ? "1fr" : "1fr 1fr",
               gap: "4rem",
               alignItems: scoringResult ? "start" : "center",
               transition: "all 0.5s ease"
@@ -328,9 +344,9 @@ export default function HomePage() {
               display: "flex", 
               flexDirection: "column", 
               gap: "2rem", 
-              maxWidth: scoringResult ? "800px" : "100%", 
-              margin: scoringResult ? "0 auto" : "0",
-              textAlign: scoringResult ? "center" : "left"
+              maxWidth: (scoringResult && showAssessment) ? "800px" : "100%", 
+              margin: (scoringResult && showAssessment) ? "0 auto" : "0",
+              textAlign: (scoringResult && showAssessment) ? "center" : "left"
             }}>
               <div className="animate-fade-in-up" style={{ marginTop: "-2rem" }}>
                 <span className="tag-badge" style={{ letterSpacing: "0.25em" }}>
@@ -380,7 +396,7 @@ export default function HomePage() {
                   gap: "2.5rem",
                   paddingTop: "2.5rem",
                   flexWrap: "wrap",
-                  justifyContent: scoringResult ? "center" : "flex-start",
+                  justifyContent: (scoringResult && showAssessment) ? "center" : "flex-start",
                   borderTop: showAssessment ? "1px solid rgba(255,255,255,0.05)" : "none",
                   marginTop: showAssessment ? "3rem" : "0"
                 }}
@@ -418,7 +434,7 @@ export default function HomePage() {
             </div>
 
             {/* Right / Bottom Content */}
-            <div className={scoringResult ? "w-full" : "hero-right w-full"} style={{ animation: "fadeInAssessment 0.6s ease" }}>
+            <div className={(scoringResult && showAssessment) ? "w-full" : "hero-right w-full"} style={{ animation: "fadeInAssessment 0.6s ease" }}>
               
               {!showAssessment && (
                 <div className="animate-fade-in delay-200" style={{ display: "flex", justifyContent: "center" }}>
@@ -481,17 +497,14 @@ export default function HomePage() {
                 </div>
               )}
 
-              {scoringResult && (
+              {showAssessment && scoringResult && (
                     <div className="results-dashboard animate-in fade-in slide-in-from-bottom-4 duration-700 text-left w-full mt-8">
                        <div className="bg-[#022f42] p-8 md:p-12 relative overflow-hidden group shadow-2xl rounded-md border border-white/10 mx-auto w-full max-w-[1000px]">
             {/* Close / Back to Home Button */}
             <button 
-              onClick={() => {
-                setScoringResult(null);
-                setShowAssessment(false);
-              }}
+              onClick={handleReset}
               className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all z-20"
-              title="Close Results and Return Home"
+              title="Clear Results and Return Home"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
