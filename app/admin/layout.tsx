@@ -9,6 +9,7 @@ import { Users, BarChart3, Settings, ShieldCheck, Database, LogOut, ChevronRight
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
