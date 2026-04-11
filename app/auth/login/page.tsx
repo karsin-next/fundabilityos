@@ -235,6 +235,23 @@ function LoginContent() {
               </div>
             )}
 
+            <button
+              type="submit"
+              disabled={loading || !email}
+              className="btn btn-primary"
+              style={{ justifyContent: "center", marginTop: "0.5rem" }}
+            >
+              {loading ? (
+                <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+              ) : mode === "password" ? (
+                <>Sign In <ArrowRight size={15} /></>
+              ) : (
+                <>Send Magic Link <ArrowRight size={15} /></>
+              )}
+            </button>
+          </div>
+        </form>
+
         {/* Social Auth */}
         <div style={{ marginTop: "1.5rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
