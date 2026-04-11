@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       type: "magiclink",
       email,
       options: {
-        redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_APP_URL || ""}/auth/callback`,
+        redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/auth/callback`,
       },
     });
 
@@ -31,8 +31,9 @@ export async function POST(req: NextRequest) {
     const magicLink = properties.action_link;
 
     // 2. Send the email via Resend
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
     const { error: resendError } = await resend.emails.send({
-      from: "FundabilityOS <auth@resend.dev>", // Replace with your domain in production
+      from: `FundabilityOS <${fromEmail}>`,
       to: [email],
       subject: "Your FundabilityOS Magic Link",
       html: `
