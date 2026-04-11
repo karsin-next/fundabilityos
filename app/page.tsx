@@ -10,6 +10,7 @@ import ScoreDashboard from "@/components/assessment/ScoreDashboard";
 import LeadCaptureGate from "@/components/auth/LeadCaptureGate";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
+import type { ScoringResult } from "@/lib/scoring";
 
 const HOW_IT_WORKS = [
   {
@@ -237,7 +238,7 @@ function PricingTabs() {
 export default function HomePage() {
   const { user } = useAuth();
   const [showAssessment, setShowAssessment] = useState(false);
-  const [scoringResult, setScoringResult] = useState<Record<string, any> | null>(null);
+  const [scoringResult, setScoringResult] = useState<ScoringResult | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const CACHE_KEY = user?.id ? `FUNDABILITY_QA_${user.id}` : "FUNDABILITY_QA_GUEST";
   const supabase = createClient();
