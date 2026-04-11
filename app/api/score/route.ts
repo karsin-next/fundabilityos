@@ -38,12 +38,11 @@ async function getMatchingOverrides(answersJson: string): Promise<string[]> {
       if (lowerAnswers.includes(override.trigger_text)) {
         matched.push({ id: override.id, rule: override.correction_rule });
         // Fire-and-forget: increment applied_count
-        supabaseAdmin
+        void supabaseAdmin
           .from("logic_overrides")
           .update({ applied_count: (override.applied_count || 0) + 1 })
           .eq("id", override.id)
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
       }
     }
     return matched.map((m) => m.rule);
@@ -219,12 +218,12 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                     const newCompletions = (pv.completions || 0) + 1;
                     const newAvg =
                       ((pv.avg_score || 0) * (newCompletions - 1) + score) / newCompletions;
-                    supabaseAdmin!
+                    void supabaseAdmin!
                       .from("prompt_versions")
                       .update({ completions: newCompletions, avg_score: newAvg })
-                      .eq("version_name", promptVersion);
-                  })
-                  .catch(console.error);
+                      .eq("version_name", promptVersion)
+                      .then(() => {}, () => {});
+                  }, (err) => console.error("[Prompt Stats Update Error]:", err));
               }
 
               // 5. Fire debate engine (async, non-blocking)
