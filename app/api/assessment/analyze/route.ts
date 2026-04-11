@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { extractAIJSON } from "@/lib/ai-json";
 
 interface CompletedAnswer {
   questionTitle: string;
@@ -90,8 +91,7 @@ Provide a precise investor-lens analysis as raw JSON only (no markdown, no expla
       });
 
       const text = message.content[0].type === "text" ? message.content[0].text : "";
-      const clean = text.replace(/```json/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(clean) as AnalysisResult;
+      const parsed = extractAIJSON<AnalysisResult>(text);
       return NextResponse.json(parsed);
     } catch (err) {
       console.error("AI analysis error, using fallback:", err);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAnthropicClient } from "@/lib/ai";
+import { extractAIJSON } from "@/lib/ai-json";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -66,15 +67,9 @@ Return ONLY valid JSON, no other text:
 
     const rawText = response.content[0].type === "text" ? response.content[0].text : "{}";
 
-    // Strip markdown code fences if Claude wraps the JSON
-    const cleaned = rawText
-      .replace(/```json\s*/gi, "")
-      .replace(/```\s*/g, "")
-      .trim();
-
     let extracted: Record<string, unknown>;
     try {
-      extracted = JSON.parse(cleaned);
+      extracted = extractAIJSON(rawText);
     } catch {
       // If parsing fails, return a graceful error response
       return NextResponse.json({ error: "AI could not parse this PDF. Please try the interview instead." }, { status: 422 });

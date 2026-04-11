@@ -21,14 +21,33 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: { session }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!exchangeError) {
+    if (!exchangeError && session) {
+      const user = session.user;
+      
+      // Sync user metadata to profiles table if it doesn't exist
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+        
+      if (!profile) {
+        await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
+          company_name: user.user_metadata?.company_name || "",
+          role: "startup" // Default role
+        });
+      }
+
       return NextResponse.redirect(`${origin}${redirectTo}`);
     }
 
     return NextResponse.redirect(
-      `${origin}/auth/login?error=${encodeURIComponent(exchangeError.message)}`
+      `${origin}/auth/login?error=${encodeURIComponent(exchangeError?.message || "Session failed")}`
     );
   }
 
