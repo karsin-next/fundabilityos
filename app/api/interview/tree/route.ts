@@ -36,8 +36,6 @@ export async function POST(req: NextRequest) {
         promptContext += "Start: This is a brand new company. Ask for their name and core mission.";
       }
     } else {
-      // Add 'Reasoning Trace' request for internal auditing
-      promptContext += "INTERNAL AUDIT MODE: Include a hidden <thinking> tag explaining your choice of the next question.\n\n";
       promptContext += "HISTORY:\n" + JSON.stringify(history, null, 2);
     }
 
