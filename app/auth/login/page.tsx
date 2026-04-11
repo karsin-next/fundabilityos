@@ -85,8 +85,8 @@ function LoginContent() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // Updated to /api/auth/callback for stable routing
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        // Pass the redirect destination so callback knows where to send the user
+        redirectTo: `${window.location.origin}/api/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
       },
     });
     if (error) setError(error.message);
