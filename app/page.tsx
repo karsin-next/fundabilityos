@@ -297,7 +297,7 @@ export default function HomePage() {
     hydrateScore();
   }, [user, supabase]);
 
-  const handleComplete = async (result: Record<string, any>) => {
+  const handleComplete = async (result: ScoringResult) => {
     setScoringResult(result);
     localStorage.setItem(CACHE_KEY, JSON.stringify(result));
 
