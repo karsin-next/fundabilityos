@@ -23,19 +23,19 @@ export default function ProgressTracker({ currentDimension, coveredDimensions = 
   const coveredNorms = coveredDimensions.map(normalize);
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className="w-full">
       {/* Header row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
-        <span className="label-mono" style={{ color: "var(--yellow)", fontSize: "0.6rem" }}>
-          AI FUNDABILITY SCAN
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+        <span className="label-mono text-[#ffd800] text-[0.6rem] md:text-[0.65rem]">
+          FundabilityOS QuickAssess
         </span>
-        <span className="label-metric" style={{ opacity: 0.6, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <span className="label-metric opacity-60 text-[0.6rem] md:text-[0.65rem] uppercase tracking-wider">
           Dynamic Profiling Active
         </span>
       </div>
 
       {/* Dimension grid */}
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+      <div className="flex gap-1.5 flex-wrap">
         {CORE_DIMENSIONS.map((dim) => {
           const isDone = coveredNorms.includes(normalize(dim));
           const isCurrent = normalize(dim) === currentNorm;
