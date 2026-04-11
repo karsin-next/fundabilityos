@@ -369,7 +369,8 @@ export default function HomePage() {
                   lineHeight: 1.8,
                   maxWidth: "34rem",
                   fontWeight: 500,
-                  margin: scoringResult ? "0 auto" : "0"
+                  margin: scoringResult ? "0 auto" : "0",
+                  paddingLeft: 0
                 }}
               >
                 Answer AI questions or upload your pitch deck. Get a score (0–100) that shows exactly
@@ -379,7 +380,7 @@ export default function HomePage() {
               {!showAssessment && (
                 <div
                   className="animate-fade-in-up delay-300"
-                  style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap", alignItems: "center", marginTop: "1rem", justifyContent: scoringResult ? "center" : "flex-start" }}
+                  style={{ display: "flex", gap: "1.25rem", alignItems: "center", marginTop: "1rem", justifyContent: scoringResult ? "center" : "flex-start" }}
                 >
                   <button onClick={() => setShowAssessment(true)} className="btn btn-primary btn-lg shadow-[0_20px_40px_-10px_rgba(255,216,0,0.3)]">
                     Start Diagnostic — It&apos;s Free
@@ -397,7 +398,7 @@ export default function HomePage() {
                 style={{
                   display: "flex",
                   gap: "2.5rem",
-                  paddingTop: "2.5rem",
+                  paddingTop: "0.5rem",
                   flexWrap: "wrap",
                   justifyContent: (scoringResult && showAssessment) ? "center" : "flex-start",
                   borderTop: showAssessment ? "1px solid rgba(255,255,255,0.05)" : "none",

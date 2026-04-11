@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getAnthropicClient } from "@/lib/ai";
+import { getAnthropicClient, MODELS } from "@/lib/ai";
 import { sendTelegramAlert } from "@/lib/telegram";
 
 // Admin-only key check would happen here in production
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }]`;
 
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: MODELS.ANALYSIS,
       max_tokens: 3000,
       messages: [{ role: "user", content: simulationPrompt }],
     });

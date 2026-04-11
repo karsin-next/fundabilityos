@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DYNAMIC_MODULE_SYSTEM_PROMPT } from "@/lib/prompts";
+import { MODELS } from "@/lib/ai";
 
 interface PreviousAnswer {
   questionTitle: string;
@@ -202,7 +203,7 @@ export async function POST(req: Request) {
     promptContent += "\nGenerate the NEXT drill-down question and 4 multiple-choice options in the strict JSON format specified.";
 
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: MODELS.ANALYSIS,
       max_tokens: 1024,
       system: DYNAMIC_MODULE_SYSTEM_PROMPT,
       messages: [{ role: "user", content: promptContent }],

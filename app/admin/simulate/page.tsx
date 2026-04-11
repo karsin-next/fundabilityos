@@ -1,182 +1,200 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Zap, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  AlertTriangle, 
-  Activity, 
-  CheckCircle2, 
-  BarChart,
-  Target
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Play, RefreshCw, CheckCircle, AlertTriangle, Clock, TrendingDown } from "lucide-react";
 
-export default function SimulationConsole() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [isAutoCruise, setIsAutoCruise] = useState(false);
-  const [progress, setProgress] = useState(1240); // Mock current progress
-  const [totalTarget] = useState(10000);
-  const [latestResults, setLatestResults] = useState<any[]>([]);
-  const [logs, setLogs] = useState<string[]>([]);
+interface CalibrationRun {
+  id: string;
+  batch_size: number;
+  profiles_generated: number;
+  score_distribution: Record<string, number>;
+  pct_above_75: number;
+  calibration_triggered: boolean;
+  updated_prompt_snippet: string | null;
+  estimated_cost_cents: number;
+  budget_aborted: boolean;
+  run_source: string;
+  created_at: string;
+}
 
-  const toggleSimulation = () => {
-    setIsRunning(!isRunning);
-    addLog(isRunning ? "Simulation suspended by admin." : "Initiating calibration batch...");
-  };
+export default function SimulatePage() {
+  const [runs, setRuns] = useState<CalibrationRun[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<CalibrationRun | null>(null);
+  const supabase = createClient();
 
-  const addLog = (msg: string) => {
-    setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 10));
+  useEffect(() => {
+    fetchRuns();
+  }, []);
+
+  async function fetchRuns() {
+    setLoading(true);
+    const { data } = await supabase
+      .from("calibration_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    if (data) {
+      setRuns(data);
+      if (data.length > 0 && !selectedRun) setSelectedRun(data[0]);
+    }
+    setLoading(false);
+  }
+
+  async function triggerSimulation() {
+    setRunning(true);
+    try {
+      const res = await fetch("/api/cron/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-run-source": "manual" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.aborted) {
+        alert(`⚠️ Budget cap reached. ${data.reason}`);
+      } else if (data.success) {
+        alert(`✅ Simulation complete!\n${data.batch_size} profiles scored.\n${data.pct_above_75}% scored >75.\nCalibration triggered: ${data.calibration_triggered}`);
+      }
+      await fetchRuns();
+    } catch (e) {
+      alert("Simulation failed. Check server logs.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const statusIcon = (run: CalibrationRun) => {
+    if (run.budget_aborted) return <AlertTriangle className="w-4 h-4 text-red-500" />;
+    if (run.calibration_triggered) return <TrendingDown className="w-4 h-4 text-amber-500" />;
+    return <CheckCircle className="w-4 h-4 text-emerald-500" />;
   };
 
   return (
     <div className="space-y-10 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex justify-between items-end">
         <div>
           <h2 className="text-4xl font-black text-[#022f42] uppercase tracking-tighter">Simulation Console</h2>
-          <p className="text-sm font-medium text-[#022f42]/50 mt-1">Autonomous 10,000-profile stress-test and logic calibration.</p>
+          <p className="text-sm font-medium text-[#022f42]/50 mt-1">
+            Recursive self-calibration engine. Prevents score inflation across all QuickAssess runs.
+          </p>
         </div>
-        
-        <div className="flex items-center gap-4">
-           <div className="flex items-center gap-2 px-4 py-2 bg-white border border-[#022f42]/10 rounded-sm">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Auto-Cruise</span>
-              <button 
-                onClick={() => {
-                   setIsAutoCruise(!isAutoCruise);
-                   addLog(isAutoCruise ? "Cruise Control disabled." : "Cruise Control enabled (100 profiles/hr).");
-                }}
-                className={`w-12 h-6 rounded-full relative transition-colors ${isAutoCruise ? 'bg-emerald-500' : 'bg-gray-200'}`}
-              >
-                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isAutoCruise ? 'left-7' : 'left-1'}`} />
-              </button>
-           </div>
-           <button 
-            onClick={toggleSimulation}
-            className={`flex items-center gap-2 px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all shadow-xl ${
-              isRunning 
-              ? 'bg-rose-500 text-white shadow-rose-500/20' 
-              : 'bg-[#ffd800] text-[#022f42] shadow-[#ffd800]/20 hover:scale-[1.02]'
-            }`}
-           >
-              {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              {isRunning ? "Stop Simulation" : "Start Next Batch"}
-           </button>
+        <div className="flex gap-3">
+          <button
+            onClick={fetchRuns}
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-[#022f42]/10 text-[10px] font-black uppercase tracking-widest text-[#022f42] hover:bg-gray-50 transition-all shadow-sm"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button
+            onClick={triggerSimulation}
+            disabled={running}
+            className="flex items-center gap-2 px-8 py-3 bg-[#022f42] text-[#ffd800] text-[10px] font-black uppercase tracking-widest hover:bg-[#ffd800] hover:text-[#022f42] transition-colors shadow-lg disabled:opacity-50"
+          >
+            {running ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {running ? "Running..." : "Run Simulation Now"}
+          </button>
         </div>
       </div>
 
-      {/* Progress Section */}
-      <div className="bg-[#022f42] p-10 shadow-2xl relative overflow-hidden group">
-         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Zap className="w-40 h-40 text-white" />
-         </div>
-         
-         <div className="relative z-10 max-w-2xl">
-            <div className="flex justify-between items-end mb-4">
-               <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[#ffd800] mb-1">Total Engine Calibration Progress</div>
-                  <div className="text-5xl font-black text-white">{( (progress / totalTarget) * 100 ).toFixed(1)}%</div>
-               </div>
-               <div className="text-right">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Target</div>
-                  <div className="text-2xl font-black text-white">{progress.toLocaleString()} <span className="text-white/20">/ {totalTarget.toLocaleString()}</span></div>
-               </div>
+      {/* Summary Cards */}
+      {runs.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Total Runs", value: runs.length },
+            { label: "Calibrations Triggered", value: runs.filter(r => r.calibration_triggered).length },
+            { label: "Budget Aborts", value: runs.filter(r => r.budget_aborted).length },
+            { label: "Total AI Cost", value: `$${(runs.reduce((s, r) => s + (r.estimated_cost_cents || 0), 0) / 100).toFixed(3)}` },
+          ].map(card => (
+            <div key={card.label} className="bg-white border border-[#022f42]/5 p-5 shadow-sm">
+              <div className="text-2xl font-black text-[#022f42]">{card.value}</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 mt-1">{card.label}</div>
             </div>
-            
-            <div className="h-4 bg-black/20 rounded-full overflow-hidden">
-               <div 
-                 className="h-full bg-gradient-to-r from-[#ffd800] to-[#ffff00] transition-all duration-1000"
-                 style={{ width: `${(progress/totalTarget)*100}%` }}
-               />
-            </div>
-         </div>
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* Live Calibration Log */}
-         <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-[#022f42]/5 shadow-sm p-6">
-               <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                     <Activity className="w-4 h-4 text-[#022f42]" />
-                     <h3 className="text-[10px] font-black uppercase tracking-widest text-[#022f42]">Live Output Stream</h3>
-                  </div>
-                  <span className="text-[9px] font-bold text-[#022f42]/30 uppercase">Node: Calibration-Alpha-9</span>
-               </div>
-               
-               <div className="bg-gray-50 p-6 font-mono text-[11px] space-y-2 h-[300px] overflow-y-auto">
-                  {logs.map((log, i) => (
-                    <div key={i} className="text-[#022f42]/70 leading-relaxed border-b border-gray-100 pb-1">
-                      {log}
-                    </div>
-                  ))}
-                  <div className="text-emerald-600 animate-pulse">
-                     {isRunning ? "> Processing synthetic batch #15..." : "> Idle. Waiting for trigger."}
-                  </div>
-               </div>
-            </div>
+        {/* Run List */}
+        <div className="lg:col-span-1 space-y-2">
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-3">Simulation History</div>
+          {loading ? (
+            Array(5).fill(0).map((_, i) => <div key={i} className="h-16 bg-white animate-pulse" />)
+          ) : runs.length === 0 ? (
+            <div className="p-8 bg-white text-center text-xs text-[#022f42]/30 italic">No simulation runs yet. Click "Run Now" to begin.</div>
+          ) : runs.map(run => (
+            <button
+              key={run.id}
+              onClick={() => setSelectedRun(run)}
+              className={`w-full text-left p-4 border-2 transition-all ${selectedRun?.id === run.id ? "border-[#ffd800] bg-white shadow-md" : "border-transparent bg-white/70 hover:bg-white"}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                {statusIcon(run)}
+                <span className="text-[9px] font-bold text-[#022f42]/30">{new Date(run.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="text-xs font-black text-[#022f42] uppercase tracking-tight">
+                {run.profiles_generated} Profiles • {run.pct_above_75?.toFixed(1)}% &gt;75
+              </div>
+              <div className="text-[9px] font-bold text-[#022f42]/40 uppercase tracking-widest mt-1">
+                {run.calibration_triggered ? "⚖️ Calibrated" : run.budget_aborted ? "🛑 Budget Abort" : "✓ Clean Run"} • {run.run_source}
+              </div>
+            </button>
+          ))}
+        </div>
 
-            {/* Batch Status */}
-            <div className="grid grid-cols-2 gap-6">
-               <div className="bg-white p-6 border border-[#022f42]/5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                     <Target className="w-4 h-4 text-emerald-500" />
-                     <span className="text-[10px] font-black uppercase tracking-widest text-[#022f42]">Accuracy Precision</span>
+        {/* Run Detail */}
+        <div className="lg:col-span-2">
+          {selectedRun ? (
+            <div className="bg-white border border-[#022f42]/5 shadow-xl">
+              <div className="p-6 border-b border-[#022f42]/5 bg-gray-50 flex items-center gap-4">
+                {statusIcon(selectedRun)}
+                <div>
+                  <h3 className="text-sm font-black text-[#022f42] uppercase tracking-tight">
+                    Run Detail — {new Date(selectedRun.created_at).toLocaleString()}
+                  </h3>
+                  <p className="text-[10px] text-[#022f42]/40 font-bold uppercase tracking-widest mt-0.5">
+                    Source: {selectedRun.run_source} • Cost: ${((selectedRun.estimated_cost_cents || 0) / 100).toFixed(4)}
+                  </p>
+                </div>
+              </div>
+              <div className="p-8 space-y-8">
+                {/* Score Distribution */}
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-4">Score Distribution</div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {Object.entries(selectedRun.score_distribution || {}).map(([band, count]) => (
+                      <div key={band} className="text-center p-4 bg-[#f2f6fa]">
+                        <div className="text-2xl font-black text-[#022f42]">{count as number}</div>
+                        <div className="text-[9px] font-black text-[#022f42]/40 uppercase tracking-widest mt-1">{band}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-3xl font-black text-[#022f42]">96.8%</div>
-                  <div className="text-[10px] font-bold text-emerald-600 uppercase mt-1">+0.4% from last batch</div>
-               </div>
-               <div className="bg-white p-6 border border-[#022f42]/5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                     <AlertTriangle className="w-4 h-4 text-amber-500" />
-                     <span className="text-[10px] font-black uppercase tracking-widest text-[#022f42]">Bias Drift Detected</span>
+                  <div className={`mt-3 p-3 text-[11px] font-bold rounded-sm ${selectedRun.pct_above_75 > 15 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+                    {selectedRun.pct_above_75?.toFixed(1)}% scored above 75 (threshold: 15%). {selectedRun.calibration_triggered ? "Calibration was triggered." : "Within healthy range."}
                   </div>
-                  <div className="text-3xl font-black text-[#022f42]">4</div>
-                  <div className="text-[10px] font-bold text-amber-600 uppercase mt-1">Pending Calibration</div>
-               </div>
-            </div>
-         </div>
+                </div>
 
-         {/* Sidebar Controls */}
-         <div className="space-y-6">
-            <div className="bg-white p-8 border border-[#022f42]/5 shadow-xl">
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-[#022f42] mb-6">Simulation Settings</h3>
-               
-               <div className="space-y-6">
+                {/* Calibration Amendment */}
+                {selectedRun.updated_prompt_snippet && (
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 block mb-2">Batch Density</label>
-                    <select className="w-full bg-gray-50 border-none p-4 text-xs font-black uppercase tracking-widest text-[#022f42] outline-none">
-                       <option>10 Profiles / Batch</option>
-                       <option>50 Profiles / Batch</option>
-                       <option selected>100 Profiles / Batch</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-[#022f42]/40 block mb-2">Engine Stress Level</label>
-                    <div className="flex items-center gap-2">
-                       <div className="h-1 bg-[#ffd800] flex-1 rounded-full" />
-                       <div className="h-1 bg-[#ffd800] flex-1 rounded-full" />
-                       <div className="h-1 bg-gray-200 flex-1 rounded-full" />
-                       <span className="text-[10px] font-black ml-2">High</span>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-3">Auto-Generated Calibration Amendment</div>
+                    <div className="bg-[#022f42] text-[#ffd800] font-mono text-xs p-6 leading-relaxed whitespace-pre-wrap rounded-sm">
+                      {selectedRun.updated_prompt_snippet}
                     </div>
                   </div>
-
-                  <button className="w-full flex items-center justify-center gap-2 p-4 bg-gray-100 text-[10px] font-black uppercase tracking-widest text-[#022f42]/60 hover:bg-gray-200 transition-all">
-                     <RotateCcw className="w-4 h-4" /> Reset Calibration Data
-                  </button>
-               </div>
+                )}
+              </div>
             </div>
-
-            <div className="bg-gradient-to-br from-[#022f42] to-[#044a69] p-8 text-white shadow-xl">
-               <BarChart className="w-8 h-8 text-[#ffd800] mb-4" />
-               <h3 className="text-sm font-black uppercase tracking-tight mb-2">Why Simulation?</h3>
-               <p className="text-[10px] font-medium text-white/60 leading-relaxed uppercase tracking-widest">
-                  Autonomous stress-testing ensures your institutional diagnostic logic remains sharp, even without real user data. Every simulation identifies potential logic drift.
-               </p>
+          ) : (
+            <div className="h-full flex items-center justify-center p-20 text-center">
+              <div><Clock className="w-12 h-12 text-[#022f42]/10 mx-auto mb-4" />
+                <p className="text-xs text-[#022f42]/30 italic">Select a simulation run to view details.</p>
+              </div>
             </div>
-         </div>
+          )}
+        </div>
       </div>
     </div>
   );

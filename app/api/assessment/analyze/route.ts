@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { extractAIJSON } from "@/lib/ai-json";
+import { MODELS } from "@/lib/ai";
 
 interface CompletedAnswer {
   questionTitle: string;
@@ -85,7 +86,7 @@ Provide a precise investor-lens analysis as raw JSON only (no markdown, no expla
 }`;
 
       const message = await anthropic.messages.create({
-        model: "claude-3-5-sonnet-20241022",
+        model: MODELS.ANALYSIS,
         max_tokens: 800,
         messages: [{ role: "user", content: prompt }],
       });

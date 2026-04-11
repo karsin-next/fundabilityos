@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, BarChart3, Settings, ShieldCheck, Database, LogOut, ChevronRight, Zap } from "lucide-react";
+import { Users, BarChart3, Settings, ShieldCheck, Database, LogOut, ChevronRight, Zap, MessageSquareMore, BookMarked } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -43,7 +43,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { name: "Performance Telemetry", href: "/admin/telemetry", icon: BarChart3 },
     { name: "Autonomous Calibration", href: "/admin/calibration", icon: ShieldCheck },
     { name: "Simulation Console", href: "/admin/simulate", icon: Zap },
-    { name: "System Config", href: "/admin/vault", icon: Settings }, // Fix: Fallback for missing settings page
+    { name: "Reasoning Traces", href: "/admin/debate", icon: MessageSquareMore },
+    { name: "Semantic Overrides", href: "/admin/overrides", icon: BookMarked },
+    { name: "System Config", href: "/admin/vault", icon: Settings },
   ];
 
   return (
