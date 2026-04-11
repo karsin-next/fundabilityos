@@ -6,6 +6,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
  * Supabase redirects here after email confirmation or OAuth.
  */
 export async function GET(request: NextRequest) {
+  console.log("[Auth Callback] [TOP] Request received at:", request.url);
   const { searchParams } = new URL(request.url);
   // On Vercel, request.url might use http or internal domains. 
   // Let's ensure we use the production origin if possible.
