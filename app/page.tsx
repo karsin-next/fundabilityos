@@ -587,7 +587,7 @@ export default function HomePage() {
       {/* =============================================
           SECTION: IMPACT SNAPSHOT
          ============================================= */}
-      <section className="max-w-[1280px] mx-auto px-6 py-12">
+      <section className="max-w-[1280px] mx-auto px-6 py-12" id="impact">
         <h2 className="text-5xl font-black text-[#ffd800] mb-8 uppercase tracking-tighter flex items-center gap-6">
           Impact Snapshot
           <div className="h-2 w-24 bg-[#ffd800]" />
@@ -605,7 +605,7 @@ export default function HomePage() {
       {/* =============================================
           SECTION: CASE STUDIES
          ============================================= */}
-      <section className="bg-[#ffd800] pb-24">
+      <section className="bg-[#ffd800] pb-24" id="cases">
         <div className="max-w-[1280px] mx-auto px-6 py-12 border-t border-[#022f42]/5">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
             <div className="max-w-2xl">
