@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { ArrowLeft, Clock } from "lucide-react";
-import AuthNav from "@/components/layout/AuthNav";
+import Navbar from "@/components/layout/Navbar";
 
 export default function ComingSoonPage() {
   return (
     <div className="min-h-screen bg-[#022f42] flex flex-col">
-      <AuthNav />
+      <Navbar />
       <div className="flex-1 flex items-center justify-center p-6 mt-16 animate-fade-in-up">
         <div className="max-w-[500px] w-full text-center relative">
           
