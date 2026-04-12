@@ -77,27 +77,26 @@ export async function POST(req: NextRequest) {
   if (token && chatId) {
     const formattedMessage = `🚨 <b>New Support Chat</b>\nUser: ${email || "Anonymous"}\n\n${content}`;
     
-    // We do NOT await this so the UI is snappy, we catch it asynchronously.
-    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: formattedMessage,
-        parse_mode: "HTML",
-      }),
-    })
-      .then((res) => res.json())
-      .then(async (tgData) => {
-         if (tgData.ok) {
-            const telegramMessageId = tgData.result.message_id;
-            // 4. Back-annotate the message with the Telegram ID so replies can be mapped
-            await supabaseAdmin.from("support_messages").update({ telegram_message_id: telegramMessageId }).eq("id", dbMsg.id);
-         }
-      })
-      .catch((tgError) => {
-         console.error("Failed to relay to Telegram:", tgError);
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: formattedMessage,
+          parse_mode: "HTML",
+        }),
       });
+      
+      const tgData = await res.json();
+      if (tgData.ok) {
+         const telegramMessageId = tgData.result.message_id;
+         // 4. Back-annotate the message with the Telegram ID so replies can be mapped
+         await supabaseAdmin.from("support_messages").update({ telegram_message_id: telegramMessageId }).eq("id", dbMsg.id);
+      }
+    } catch (tgError) {
+       console.error("Failed to relay to Telegram:", tgError);
+    }
   }
 
   return NextResponse.json({ success: true, message: dbMsg });
