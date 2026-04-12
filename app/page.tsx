@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle, CheckCircle2, AlertCircle, TrendingUp, Users, 
 import ScoreGaugeMock from "@/components/score/ScoreGaugeMock";
 import QuickAssess from "@/components/assessment/QuickAssess";
 import ScoreDashboard from "@/components/assessment/ScoreDashboard";
+import PitchDeckUploader from "@/components/upload/PitchDeckUploader";
 import LeadCaptureGate from "@/components/auth/LeadCaptureGate";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
@@ -238,6 +239,7 @@ function PricingTabs() {
 export default function HomePage() {
   const { user } = useAuth();
   const [showAssessment, setShowAssessment] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
   const [scoringResult, setScoringResult] = useState<ScoringResult | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const CACHE_KEY = user?.id ? `FUNDABILITY_QA_${user.id}` : "FUNDABILITY_QA_GUEST";
@@ -317,6 +319,7 @@ export default function HomePage() {
     localStorage.removeItem("FUNDABILITY_QA_LATEST");
     setScoringResult(null);
     setShowAssessment(false);
+    setShowUpload(false);
   };
 
   if (!isHydrated) return null;
@@ -335,7 +338,7 @@ export default function HomePage() {
             <div
             style={{
               display: "grid",
-              gridTemplateColumns: (scoringResult && showAssessment) ? "1fr" : "1fr 1fr",
+              gridTemplateColumns: (scoringResult && (showAssessment || showUpload)) ? "1fr" : "1fr 1fr",
               gap: "4rem",
               alignItems: scoringResult ? "start" : "center",
               transition: "all 0.5s ease"
@@ -347,9 +350,9 @@ export default function HomePage() {
               display: "flex", 
               flexDirection: "column", 
               gap: "2rem", 
-              maxWidth: (scoringResult && showAssessment) ? "800px" : "100%", 
-              margin: (scoringResult && showAssessment) ? "0 auto" : "0",
-              textAlign: (scoringResult && showAssessment) ? "center" : "left"
+              maxWidth: (scoringResult && (showAssessment || showUpload)) ? "800px" : "100%", 
+              margin: (scoringResult && (showAssessment || showUpload)) ? "0 auto" : "0",
+              textAlign: (scoringResult && (showAssessment || showUpload)) ? "center" : "left"
             }}>
               <div className="animate-fade-in-up" style={{ marginTop: "-2rem" }}>
                 <span className="tag-badge" style={{ letterSpacing: "0.25em" }}>
@@ -377,18 +380,18 @@ export default function HomePage() {
                 where you stand — and what investors will push back on before you pitch.
               </p>
 
-              {!showAssessment && (
+              {(!showAssessment && !showUpload) && (
                 <div
                   className="animate-fade-in-up delay-300"
                   style={{ display: "flex", gap: "1.25rem", alignItems: "center", marginTop: "1rem", justifyContent: scoringResult ? "center" : "flex-start" }}
                 >
-                  <button onClick={() => setShowAssessment(true)} className="btn btn-primary btn-lg shadow-[0_20px_40px_-10px_rgba(255,216,0,0.3)]">
-                    Start Diagnostic — It&apos;s Free
+                  <button onClick={() => { setShowAssessment(true); setShowUpload(false); }} className="btn btn-primary btn-lg shadow-[0_20px_40px_-10px_rgba(255,216,0,0.3)]">
+                    Start Diagnostic
                     <ArrowRight size={16} />
                   </button>
-                  <Link href="/upload" className="btn btn-ghost border-white/10 hover:border-white/30 text-white/70 hover:text-white">
+                  <button onClick={() => { setShowUpload(true); setShowAssessment(false); }} className="btn btn-ghost border-white/20 hover:border-white/50 text-white hover:text-white px-6">
                     <Database className="w-4 h-4 mr-2" /> Pitchdeck Upload
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -400,12 +403,12 @@ export default function HomePage() {
                   gap: "2.5rem",
                   paddingTop: "0.5rem",
                   flexWrap: "wrap",
-                  justifyContent: (scoringResult && showAssessment) ? "center" : "flex-start",
-                  borderTop: showAssessment ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  marginTop: showAssessment ? "3rem" : "0"
+                  justifyContent: (scoringResult && (showAssessment || showUpload)) ? "center" : "flex-start",
+                  borderTop: (showAssessment || showUpload) ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  marginTop: (showAssessment || showUpload) ? "3rem" : "0"
                 }}
               >
-                {!showAssessment ? (
+                {(!showAssessment && !showUpload) ? (
                    [
                     { value: "2,400+", label: "Founders Assessed" },
                     { value: "12", label: "Markets Covered" },
@@ -438,9 +441,9 @@ export default function HomePage() {
             </div>
 
             {/* Right / Bottom Content */}
-            <div className={(scoringResult && showAssessment) ? "w-full" : "hero-right w-full mt-12 md:mt-0"} style={{ animation: "fadeInAssessment 0.6s ease" }}>
+            <div className={(scoringResult && (showAssessment || showUpload)) ? "w-full" : "hero-right w-full mt-12 md:mt-0"} style={{ animation: "fadeInAssessment 0.6s ease" }}>
               
-              {!showAssessment && (
+              {(!showAssessment && !showUpload) && (
                 <div className="animate-fade-in delay-200" style={{ display: "flex", justifyContent: "center" }}>
                   <div
                     style={{
@@ -500,6 +503,21 @@ export default function HomePage() {
                        <QuickAssess isEmbedded={true} onComplete={handleComplete} />
                     </LeadCaptureGate>
                   </div>
+                </div>
+              )}
+
+              {showUpload && !scoringResult && (
+                <div style={{ position: "relative", width: "100%", maxWidth: "600px", margin: "0 auto", padding: "1rem" }} className="animate-fade-in-up">
+                  <div style={{ position: "absolute", top: "2rem", right: "2rem", zIndex: 10 }}>
+                    <button 
+                      onClick={() => setShowUpload(false)} 
+                      className="text-white/50 hover:text-white"
+                      title="Cancel Upload"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                  </div>
+                  <PitchDeckUploader isEmbedded={true} />
                 </div>
               )}
 
