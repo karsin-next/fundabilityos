@@ -2,16 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, X, Send, User, Bot, Loader2, ArrowRight } from "lucide-react";
-import useSWR from "swr";
-
 interface SupportMessage {
   id: string;
   sender_type: "user" | "admin";
   content: string;
   created_at: string;
 }
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,14 +34,30 @@ export default function ChatWidget() {
     }
   }, []);
 
-  // Poll for messages ONLY if widget is open and identified
-  const { data, mutate } = useSWR(
-    isOpen && isIdentified && sessionId ? `/api/support?sessionId=${sessionId}` : null,
-    fetcher,
-    { refreshInterval: 3000 }
-  );
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
 
-  const messages: SupportMessage[] = data?.messages || [];
+  // Poll for messages ONLY if widget is open and identified
+  useEffect(() => {
+    if (!isOpen || !isIdentified || !sessionId) return;
+    
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/support?sessionId=${sessionId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.messages) {
+          setMessages(data.messages);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    fetchMessages(); // initial fetch
+    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [isOpen, isIdentified, sessionId]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -87,7 +99,7 @@ export default function ChatWidget() {
     setInput("");
     
     // Optimistic update
-    mutate({ messages: [...messages, { id: "temp", sender_type: "user", content, created_at: new Date().toISOString() }] }, false);
+    setMessages((prev) => [...prev, { id: "temp-" + Date.now(), sender_type: "user", content, created_at: new Date().toISOString() }]);
 
     try {
       await fetch("/api/support", {
@@ -95,7 +107,7 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, email, content }),
       });
-      mutate(); // Re-fetch actual
+      // The polling interval will catch the new message soon, but we could also manually trigger a fetch here.
     } catch (err) {
       console.error("Failed to send:", err);
     }
