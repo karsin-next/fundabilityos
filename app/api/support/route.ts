@@ -5,7 +5,7 @@ import { Database } from "@/lib/supabase/types";
 // Admin/Server-side client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
