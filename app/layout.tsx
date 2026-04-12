@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import FooterWrapper from "@/components/layout/FooterWrapper";
 import { AuthProvider } from "@/context/AuthContext";
+import ChatWidget from "@/components/support/ChatWidget";
 
 export const metadata: Metadata = {
   title: {
@@ -50,6 +51,7 @@ export default function RootLayout({
           <Navbar />
           <main>{children}</main>
           <FooterWrapper />
+          <ChatWidget />
         </AuthProvider>
       </body>
     </html>
