@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const authHeader = req.headers.get("authorization");
     if (process.env.CRON_SECRET && process.env.NODE_ENV === "production") {
       if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return new NextResponse("Unauthorized", { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 
@@ -209,10 +209,18 @@ Return ONLY the new instruction text. No JSON, no preamble.`;
       calibration_triggered: calibrationTriggered,
       estimated_cost_usd: (costCents / 100).toFixed(4),
     });
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("[Simulation Cron Error]:", err);
+    
+    // Better error parsing for Anthropic/Supabase
+    let errorMessage = "Unknown error";
+    if (err.message) errorMessage = err.message;
+    if (err.status === 401 || (err.error && err.error.type === 'authentication_error')) {
+        errorMessage = "Anthropic API Key invalid. Please check your .env.local file.";
+    }
+
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

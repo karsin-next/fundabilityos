@@ -44,6 +44,7 @@ export default function SimulatePage() {
   }
 
   async function triggerSimulation() {
+    if (!confirm("Run diagnostic simulation? This will generate 20 synthetic profiles and score them. Cost approximately $0.15 - $0.25 USD.")) return;
     setRunning(true);
     try {
       const res = await fetch("/api/cron/simulate", {
@@ -51,24 +52,57 @@ export default function SimulatePage() {
         headers: { "Content-Type": "application/json", "x-run-source": "manual" },
         body: JSON.stringify({}),
       });
-      const data = await res.json();
+      
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = { error: `Server returned non-JSON response (Status: ${res.status})` };
+      }
+      
+      if (!res.ok) {
+        throw new Error(data.error || `Simulation failed (Status: ${res.status})`);
+      }
+
       if (data.aborted) {
         alert(`⚠️ Budget cap reached. ${data.reason}`);
       } else if (data.success) {
         alert(`✅ Simulation complete!\n${data.batch_size} profiles scored.\n${data.pct_above_75}% scored >75.\nCalibration triggered: ${data.calibration_triggered}`);
       }
       await fetchRuns();
+    } catch (e: any) {
+      alert(`Simulation failed: ${e.message}`);
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function handleApprove(runId: string) {
+    if (!confirm("Apply this logic correction to the production prompt?")) return;
+    setRunning(true);
+    try {
+      const res = await fetch("/api/admin/calibration/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ run_id: runId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Logic correction applied successfully!");
+      } else {
+        alert(`❌ Failed: ${data.error}`);
+      }
     } catch (e) {
-      alert("Simulation failed. Check server logs.");
+      alert("Error applying correction");
     } finally {
       setRunning(false);
     }
   }
 
   const statusIcon = (run: CalibrationRun) => {
-    if (run.budget_aborted) return <AlertTriangle className="w-4 h-4 text-red-500" />;
-    if (run.calibration_triggered) return <TrendingDown className="w-4 h-4 text-amber-500" />;
-    return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+    if (run.budget_aborted) return <AlertTriangle className="w-5 h-5 text-red-500" />;
+    if (run.calibration_triggered) return <TrendingDown className="w-5 h-5 text-amber-500" />;
+    return <CheckCircle className="w-5 h-5 text-emerald-500" />;
   };
 
   return (
@@ -84,7 +118,7 @@ export default function SimulatePage() {
         <div className="flex gap-3">
           <button
             onClick={fetchRuns}
-            className="flex items-center gap-2 px-5 py-3 bg-white border border-[#022f42]/10 text-[10px] font-black uppercase tracking-widest text-[#022f42] hover:bg-gray-50 transition-all shadow-sm"
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-[#022f42]/10 text-[10px] font-black uppercase tracking-widest text-[#022f42] hover:bg-gray-100 transition-all font-black"
           >
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
@@ -94,7 +128,7 @@ export default function SimulatePage() {
             className="flex items-center gap-2 px-8 py-3 bg-[#022f42] text-[#ffd800] text-[10px] font-black uppercase tracking-widest hover:bg-[#ffd800] hover:text-[#022f42] transition-colors shadow-lg disabled:opacity-50"
           >
             {running ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {running ? "Running..." : "Run Simulation Now"}
+            {running ? "Simulating..." : "Run Simulation Now"}
           </button>
         </div>
       </div>
@@ -119,26 +153,29 @@ export default function SimulatePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Run List */}
         <div className="lg:col-span-1 space-y-2">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-3">Simulation History</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-3 px-1">Simulation History</div>
           {loading ? (
-            Array(5).fill(0).map((_, i) => <div key={i} className="h-16 bg-white animate-pulse" />)
+            Array(5).fill(0).map((_, i) => <div key={i} className="h-20 bg-white animate-pulse" />)
           ) : runs.length === 0 ? (
-            <div className="p-8 bg-white text-center text-xs text-[#022f42]/30 italic">No simulation runs yet. Click "Run Now" to begin.</div>
+            <div className="p-8 bg-white border border-dashed border-[#022f42]/10 text-center text-xs text-[#022f42]/30 italic">No simulation runs yet. Click "Run Now" to begin.</div>
           ) : runs.map(run => (
             <button
               key={run.id}
               onClick={() => setSelectedRun(run)}
-              className={`w-full text-left p-4 border-2 transition-all ${selectedRun?.id === run.id ? "border-[#ffd800] bg-white shadow-md" : "border-transparent bg-white/70 hover:bg-white"}`}
+              className={`w-full text-left p-5 border-2 transition-all relative ${selectedRun?.id === run.id ? "border-[#ffd800] bg-white shadow-lg" : "border-transparent bg-white/70 hover:bg-white"}`}
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-2">
                 {statusIcon(run)}
-                <span className="text-[9px] font-bold text-[#022f42]/30">{new Date(run.created_at).toLocaleDateString()}</span>
+                <span className="text-[9px] font-black text-[#022f42]/20 uppercase tracking-widest">{new Date(run.created_at).toLocaleDateString()}</span>
               </div>
-              <div className="text-xs font-black text-[#022f42] uppercase tracking-tight">
-                {run.profiles_generated} Profiles • {run.pct_above_75?.toFixed(1)}% &gt;75
+              <div className="text-sm font-black text-[#022f42] uppercase tracking-tighter">
+                {run.profiles_generated} Profiles Scored
               </div>
-              <div className="text-[9px] font-bold text-[#022f42]/40 uppercase tracking-widest mt-1">
-                {run.calibration_triggered ? "⚖️ Calibrated" : run.budget_aborted ? "🛑 Budget Abort" : "✓ Clean Run"} • {run.run_source}
+              <div className="flex items-center justify-between mt-1">
+                 <div className="text-[9px] font-black text-[#022f42]/40 uppercase tracking-widest">
+                    {run.pct_above_75?.toFixed(1)}% &gt;75
+                 </div>
+                 <div className="text-[8px] font-black uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 text-[#022f42]/40">{run.run_source}</div>
               </div>
             </button>
           ))}
@@ -147,50 +184,90 @@ export default function SimulatePage() {
         {/* Run Detail */}
         <div className="lg:col-span-2">
           {selectedRun ? (
-            <div className="bg-white border border-[#022f42]/5 shadow-xl">
-              <div className="p-6 border-b border-[#022f42]/5 bg-gray-50 flex items-center gap-4">
-                {statusIcon(selectedRun)}
-                <div>
-                  <h3 className="text-sm font-black text-[#022f42] uppercase tracking-tight">
-                    Run Detail — {new Date(selectedRun.created_at).toLocaleString()}
-                  </h3>
-                  <p className="text-[10px] text-[#022f42]/40 font-bold uppercase tracking-widest mt-0.5">
-                    Source: {selectedRun.run_source} • Cost: ${((selectedRun.estimated_cost_cents || 0) / 100).toFixed(4)}
-                  </p>
+            <div className="bg-white border border-[#022f42]/5 shadow-xl min-h-[500px] flex flex-col">
+              <div className="p-6 border-b border-[#022f42]/5 bg-gray-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white border border-[#022f42]/10 text-[#022f42] rounded-sm shadow-sm">
+                    {statusIcon(selectedRun)}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-[#022f42] uppercase tracking-tight">
+                       Audit Run Trace
+                    </h3>
+                    <p className="text-[10px] text-[#022f42]/40 font-bold uppercase tracking-widest mt-1">
+                      {new Date(selectedRun.created_at).toLocaleString()} • ID: {selectedRun.id.slice(0,8)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                   <div className="text-[9px] font-black text-[#022f42]/20 uppercase tracking-widest mb-1">Estimated Cost</div>
+                   <div className="text-sm font-black text-[#022f42]">${((selectedRun.estimated_cost_cents || 0) / 100).toFixed(4)}</div>
                 </div>
               </div>
-              <div className="p-8 space-y-8">
+              
+              <div className="p-10 space-y-10 flex-1">
                 {/* Score Distribution */}
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-4">Score Distribution</div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {Object.entries(selectedRun.score_distribution || {}).map(([band, count]) => (
-                      <div key={band} className="text-center p-4 bg-[#f2f6fa]">
-                        <div className="text-2xl font-black text-[#022f42]">{count as number}</div>
-                        <div className="text-[9px] font-black text-[#022f42]/40 uppercase tracking-widest mt-1">{band}</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-6 flex items-center gap-2">
+                    <TrendingDown className="w-3.5 h-3.5" /> Synthetic Population Benchmarking
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
+                    {Object.entries(selectedRun.score_distribution || { "0-24": 0, "25-49": 0, "50-74": 0, "75-100": 0 }).map(([band, count]) => (
+                      <div key={band} className="text-center p-6 bg-[#f2f6fa] border border-[#022f42]/5">
+                        <div className="text-3xl font-black text-[#022f42]">{count as number}</div>
+                        <div className="text-[9px] font-black text-[#022f42]/30 uppercase tracking-widest mt-1">{band}</div>
                       </div>
                     ))}
                   </div>
-                  <div className={`mt-3 p-3 text-[11px] font-bold rounded-sm ${selectedRun.pct_above_75 > 15 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
-                    {selectedRun.pct_above_75?.toFixed(1)}% scored above 75 (threshold: 15%). {selectedRun.calibration_triggered ? "Calibration was triggered." : "Within healthy range."}
+                  <div className={`mt-6 p-4 text-[10px] font-black uppercase tracking-widest border ${selectedRun.pct_above_75 > 15 ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
+                    Inflation Signal: {selectedRun.pct_above_75?.toFixed(1)}% scored &gt;75 {selectedRun.calibration_triggered ? "(CRITICAL: ABOVE 15% THRESHOLD)" : "(HEALTHY)"}
                   </div>
                 </div>
 
                 {/* Calibration Amendment */}
-                {selectedRun.updated_prompt_snippet && (
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 mb-3">Auto-Generated Calibration Amendment</div>
-                    <div className="bg-[#022f42] text-[#ffd800] font-mono text-xs p-6 leading-relaxed whitespace-pre-wrap rounded-sm">
+                {selectedRun.updated_prompt_snippet ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                       <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Proposed Strictness Amendment</div>
+                       <div className="text-[8px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-2 py-0.5">Recommended</div>
+                    </div>
+                    <div className="bg-[#022f42] text-[#ffd800] font-mono text-[11px] p-8 leading-relaxed whitespace-pre-wrap rounded-sm shadow-inner relative group border border-white/5">
+                      <div className="absolute top-4 right-4 animate-pulse opacity-20 group-hover:opacity-100 transition-opacity">
+                        <RefreshCw className="w-4 h-4" />
+                      </div>
                       {selectedRun.updated_prompt_snippet}
                     </div>
                   </div>
+                ) : (
+                    <div className="p-10 bg-gray-50 border border-dashed border-[#022f42]/10 text-center rounded-sm">
+                        <CheckCircle className="w-8 h-8 text-[#022f42]/10 mx-auto mb-3" />
+                        <div className="text-[10px] font-black uppercase tracking-widest text-[#022f42]/30">No Prompt Amendment Required</div>
+                        <p className="text-[9px] font-bold text-[#022f42]/20 uppercase tracking-widest mt-1">Scoring distribution remains within institutional grade parameters.</p>
+                    </div>
                 )}
               </div>
+
+              {selectedRun.updated_prompt_snippet && (
+                <div className="p-6 bg-[#022f42] flex justify-between items-center shadow-2xl">
+                   <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      <div className="text-[10px] font-black text-white/50 uppercase tracking-widest">Awaiting Manual Approval</div>
+                   </div>
+                   <button 
+                    onClick={() => handleApprove(selectedRun.id)}
+                    disabled={running}
+                    className="px-8 py-3 bg-[#ffd800] text-[#022f42] text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl disabled:opacity-50"
+                   >
+                     Approve & Apply Logic Correction
+                   </button>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center p-20 text-center">
-              <div><Clock className="w-12 h-12 text-[#022f42]/10 mx-auto mb-4" />
-                <p className="text-xs text-[#022f42]/30 italic">Select a simulation run to view details.</p>
+            <div className="h-full flex items-center justify-center p-20 text-center bg-white/40 border border-[#022f42]/5 border-dashed">
+              <div className="max-w-xs grayscale opacity-20">
+                <Clock className="w-12 h-12 text-[#022f42] mx-auto mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#022f42]">Select a trace to view audit details</p>
               </div>
             </div>
           )}
