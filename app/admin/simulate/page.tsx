@@ -157,7 +157,7 @@ export default function SimulatePage() {
           {loading ? (
             Array(5).fill(0).map((_, i) => <div key={i} className="h-20 bg-white animate-pulse" />)
           ) : runs.length === 0 ? (
-            <div className="p-8 bg-white border border-dashed border-[#022f42]/10 text-center text-xs text-[#022f42]/30 italic">No simulation runs yet. Click "Run Now" to begin.</div>
+            <div className="p-8 bg-white border border-dashed border-[#022f42]/10 text-center text-xs text-[#022f42]/30 italic">No simulation runs yet. Click &quot;Run Now&quot; to begin.</div>
           ) : runs.map(run => (
             <button
               key={run.id}

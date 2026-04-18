@@ -11,18 +11,6 @@ import {
   ExternalLink,
   Plus,
   History,
-  Info
-} from "lucide-react";
-
-import { 
-  GitBranch, 
-  Play, 
-  Trash2, 
-  Copy, 
-  Save, 
-  ExternalLink,
-  Plus,
-  History,
   Info,
   X,
   Check
@@ -168,7 +156,7 @@ export default function CalibrationPage() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-4xl font-black text-[#022f42] uppercase tracking-tighter">Logic Calibration</h2>
-          <p className="text-sm font-medium text-[#022f42]/50 mt-1">Manage the proprietary "Institutional Brain" and A/B test diagnostic logic.</p>
+          <p className="text-sm font-medium text-[#022f42]/50 mt-1">Manage the proprietary &quot;Institutional Brain&quot; and A/B test diagnostic logic.</p>
         </div>
         <button 
           onClick={() => setShowAddModal(true)}
