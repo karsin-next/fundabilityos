@@ -24,7 +24,9 @@ const supabaseAdmin =
 
 // ── Helper: estimate cost in cents (Sonnet ≈ $3/M input + $15/M output) ────────
 function estimateCostCents(inputTokens: number, outputTokens: number): number {
-  return Math.round((inputTokens * 0.0003 + outputTokens * 0.0015) * 100);
+  // Claude prices: $3/M input, $15/M output (approx)
+  // 0.0003 cents/token input, 0.0015 cents/token output
+  return Math.round((inputTokens * 0.0003 + outputTokens * 0.0015));
 }
 
 // ── Helper: check monthly AI spend from calibration_log ───────────────────────
