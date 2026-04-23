@@ -191,20 +191,20 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                 : "http://localhost:3000";
               const reportUrl = `${baseUrl}/report/${reportId}`;
 
-              // 1. Track event
-              trackEvent("assessment_completed", {
+              // 1. Telegram notification
+              await sendTelegramAlert(
+                `🤖 <b>AI Assessment Completed</b>\nScore: ${score}/100 (${result.band})\nTop Gap: ${result.top_3_gaps?.[0]?.dimension || "N/A"}\nOverrides Applied: ${matchedOverrides.length}`
+              ).catch(console.error);
+
+              // 2. Track event
+              await trackEvent("assessment_completed", {
                 sessionId: assessmentId,
                 score,
                 eventData: { band: result.band, prompt_version: promptVersion },
               }).catch(console.error);
 
-              // 2. Telegram notification
-              sendTelegramAlert(
-                `🤖 <b>AI Assessment Completed</b>\nScore: ${score}/100 (${result.band})\nTop Gap: ${result.top_3_gaps?.[0]?.dimension || "N/A"}\nOverrides Applied: ${matchedOverrides.length}`
-              ).catch(console.error);
-
               // 3. Log interaction with reasoning trace
-              logInteraction({
+              await logInteraction({
                 assessment_id: assessmentId,
                 prompt_version: promptVersion,
                 input_context: answersJson,
@@ -214,26 +214,25 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
               }).catch(console.error);
 
               if (supabaseAdmin) {
-                // 4. Update prompt_versions stats
-                supabaseAdmin
-                  .from("prompt_versions")
-                  .select("completions, avg_score")
-                  .eq("version_name", promptVersion)
-                  .single()
-                  .then(({ data: pv }) => {
-                    if (!pv) return;
-                    const newCompletions = (pv.completions || 0) + 1;
-                    const newAvg =
-                      ((pv.avg_score || 0) * (newCompletions - 1) + score) / newCompletions;
-                    void supabaseAdmin!
-                      .from("prompt_versions")
-                      .update({ completions: newCompletions, avg_score: newAvg })
-                      .eq("version_name", promptVersion)
-                      .then(() => {}, () => {});
-                  }, (err) => console.error("[Prompt Stats Update Error]:", err));
+                // 4. Insert dummy session to satisfy foreign key constraints if it doesn't exist
+                if (!sessionId) {
+                  await supabaseAdmin.from("sessions").insert({
+                    id: assessmentId,
+                    user_id: userId || null,
+                    input_method: "interview",
+                    status: "completed",
+                    started_at: new Date().toISOString(),
+                    completed_at: new Date().toISOString()
+                  }).catch(console.error);
+                } else {
+                  await supabaseAdmin.from("sessions").update({ 
+                    status: "completed", 
+                    completed_at: new Date().toISOString() 
+                  }).eq("id", assessmentId).catch(console.error);
+                }
 
                 // 5. Persist to Reports table
-                void supabaseAdmin
+                await supabaseAdmin
                   .from("reports")
                   .insert({
                     id: reportId,
@@ -250,21 +249,29 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                     action_items: result.action_items,
                     summary_paragraph: result.summary_paragraph,
                   })
-                  .then(({ error }) => {
-                    if (error) console.error("[Report Insert Error]:", error);
-                  });
+                  .catch(console.error);
 
-                // 6. Update Session status
-                void supabaseAdmin
-                  .from("sessions")
-                  .update({ status: "completed", completed_at: new Date().toISOString() })
-                  .eq("id", assessmentId)
-                  .then(() => {}, () => {});
+                // 6. Update prompt_versions stats
+                await supabaseAdmin
+                  .from("prompt_versions")
+                  .select("completions, avg_score")
+                  .eq("version_name", promptVersion)
+                  .single()
+                  .then(async ({ data: pv }) => {
+                    if (!pv) return;
+                    const newCompletions = (pv.completions || 0) + 1;
+                    const newAvg =
+                      ((pv.avg_score || 0) * (newCompletions - 1) + score) / newCompletions;
+                    await supabaseAdmin!
+                      .from("prompt_versions")
+                      .update({ completions: newCompletions, avg_score: newAvg })
+                      .eq("version_name", promptVersion);
+                  }).catch(console.error);
               }
 
               // 7. Send Email to User
               if (userEmail) {
-                resend.emails.send({
+                await resend.emails.send({
                   from: "FundabilityOS <hello@nextblaze.asia>",
                   to: userEmail,
                   subject: `Your Fundability Score is ${score}/100`,
@@ -273,7 +280,7 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                     band: result.band,
                     reportUrl: reportUrl,
                   }) as React.ReactElement,
-                }).catch((e) => console.error("[Resend Error]:", e));
+                }).catch(console.error);
               }
 
               // 8. Fire debate engine (async, non-blocking)
