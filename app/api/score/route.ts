@@ -277,7 +277,7 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
               // 7. Send Email to User
               if (userEmail) {
                 await resend.emails.send({
-                  from: "FundabilityOS <hello@nextblaze.asia>",
+                  from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
                   to: userEmail,
                   subject: `Your Fundability Score is ${score}/100`,
                   react: DiagnosticCompleteEmail({
