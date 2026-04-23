@@ -25,6 +25,7 @@ interface Profile {
   company_name: string;
   is_admin: boolean;
   created_at: string;
+  reports?: { id: string; score: number; band: string; created_at: string }[];
 }
 
 export default function UserManagementPage() {
@@ -41,7 +42,7 @@ export default function UserManagementPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, reports(id, score, band, created_at)")
       .order("created_at", { ascending: false });
 
     if (data) setUsers(data);
@@ -130,6 +131,7 @@ export default function UserManagementPage() {
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">User Profile</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Company</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Latest Score</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40">Joined</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#022f42]/40 text-right">Actions</th>
               </tr>
@@ -138,7 +140,7 @@ export default function UserManagementPage() {
               {loading ? (
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={5} className="px-6 py-8 h-20 bg-gray-50/50"></td>
+                    <td colSpan={6} className="px-6 py-8 h-20 bg-gray-50/50"></td>
                   </tr>
                 ))
               ) : filteredUsers.map((user) => (
@@ -169,6 +171,16 @@ export default function UserManagementPage() {
                       <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-sm">Founder</span>
                     )}
                   </td>
+                  <td className="px-6 py-6">
+                    {user.reports && user.reports.length > 0 ? (
+                      <div className="flex flex-col">
+                        <span className="font-black text-[#022f42] text-lg">{user.reports[user.reports.length - 1].score}<span className="text-xs text-[#022f42]/40">/100</span></span>
+                        <span className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">{user.reports[user.reports.length - 1].band}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-[#022f42]/20">No data</span>
+                    )}
+                  </td>
                   <td className="px-6 py-6 text-xs font-bold text-[#022f42]/40">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 opacity-50" />
@@ -177,6 +189,16 @@ export default function UserManagementPage() {
                   </td>
                   <td className="px-6 py-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {user.reports && user.reports.length > 0 && (
+                        <a 
+                          href={`/report/${user.reports[user.reports.length - 1].id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2 hover:bg-white hover:shadow-md transition-all rounded-sm text-amber-500 hover:text-amber-600" title="View Latest Report"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </a>
+                      )}
                       <button className="p-2 hover:bg-white hover:shadow-md transition-all rounded-sm text-[#022f42]/40 hover:text-[#022f42]" title="Edit User">
                         <Edit2 className="w-4 h-4" />
                       </button>
