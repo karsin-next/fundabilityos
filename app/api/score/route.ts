@@ -191,19 +191,40 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                 : "http://localhost:3000";
               const reportUrl = `${baseUrl}/report/${reportId}`;
 
-              // 1. Telegram notification
+              // 1. Ensure session exists (must be first for foreign keys)
+              if (supabaseAdmin) {
+                if (!sessionId) {
+                  const { error: sessionErr } = await supabaseAdmin.from("sessions").insert({
+                    id: assessmentId,
+                    user_id: userId || null,
+                    input_method: "interview",
+                    status: "completed",
+                    started_at: new Date().toISOString(),
+                    completed_at: new Date().toISOString()
+                  });
+                  if (sessionErr && sessionErr.code !== '23505') console.error("Session Insert Error:", sessionErr);
+                } else {
+                  const { error: sessionUpdateErr } = await supabaseAdmin.from("sessions").update({ 
+                    status: "completed", 
+                    completed_at: new Date().toISOString() 
+                  }).eq("id", assessmentId);
+                  if (sessionUpdateErr) console.error("Session Update Error:", sessionUpdateErr);
+                }
+              }
+
+              // 2. Telegram notification
               await sendTelegramAlert(
                 `🤖 <b>AI Assessment Completed</b>\nScore: ${score}/100 (${result.band})\nTop Gap: ${result.top_3_gaps?.[0]?.dimension || "N/A"}\nOverrides Applied: ${matchedOverrides.length}`
               ).catch(console.error);
 
-              // 2. Track event
+              // 3. Track event
               await trackEvent("assessment_completed", {
                 sessionId: assessmentId,
                 score,
                 eventData: { band: result.band, prompt_version: promptVersion },
               }).catch(console.error);
 
-              // 3. Log interaction with reasoning trace
+              // 4. Log interaction with reasoning trace
               await logInteraction({
                 assessment_id: assessmentId,
                 prompt_version: promptVersion,
@@ -214,25 +235,9 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
               }).catch(console.error);
 
               if (supabaseAdmin) {
-                // 4. Insert dummy session to satisfy foreign key constraints if it doesn't exist
-                if (!sessionId) {
-                  await supabaseAdmin.from("sessions").insert({
-                    id: assessmentId,
-                    user_id: userId || null,
-                    input_method: "interview",
-                    status: "completed",
-                    started_at: new Date().toISOString(),
-                    completed_at: new Date().toISOString()
-                  }).catch(console.error);
-                } else {
-                  await supabaseAdmin.from("sessions").update({ 
-                    status: "completed", 
-                    completed_at: new Date().toISOString() 
-                  }).eq("id", assessmentId).catch(console.error);
-                }
 
                 // 5. Persist to Reports table
-                await supabaseAdmin
+                const { error: reportErr } = await supabaseAdmin
                   .from("reports")
                   .insert({
                     id: reportId,
@@ -248,8 +253,8 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                     investor_concerns: result.investor_concerns,
                     action_items: result.action_items,
                     summary_paragraph: result.summary_paragraph,
-                  })
-                  .catch(console.error);
+                  });
+                if (reportErr) console.error("Report Insert Error:", reportErr);
 
                 // 6. Update prompt_versions stats
                 await supabaseAdmin
@@ -272,7 +277,7 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
               // 7. Send Email to User
               if (userEmail) {
                 await resend.emails.send({
-                  from: "FundabilityOS <hello@nextblaze.asia>",
+                  from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
                   to: userEmail,
                   subject: `Your Fundability Score is ${score}/100`,
                   react: DiagnosticCompleteEmail({
