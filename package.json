@@ -1,6 +1,6 @@
 {
   "name": "fundabilityos-app",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.82.0",
+    "@anthropic-ai/sdk": "latest",
     "@react-email/components": "^1.0.11",
     "@react-pdf/renderer": "^4.3.2",
     "@stripe/stripe-js": "^9.0.1",

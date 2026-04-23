@@ -31,12 +31,15 @@ export default function SimulatePage() {
 
   async function fetchRuns() {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("calibration_log")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(15);
-    if (data) {
+    
+    if (error) {
+      console.error("[Simulation] Fetch error:", error.message);
+    } else if (data) {
       setRuns(data);
       if (data.length > 0 && !selectedRun) setSelectedRun(data[0]);
     }
