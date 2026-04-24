@@ -193,10 +193,22 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
 
               // 1. Ensure session exists (must be first for foreign keys)
               if (supabaseAdmin) {
+                let finalUserId = userId;
+
+                // SMART LINKING: If userId is missing but we have an email, look up the user
+                if (!finalUserId && userEmail) {
+                  const { data: profile } = await supabaseAdmin
+                    .from("profiles")
+                    .select("id")
+                    .eq("email", userEmail)
+                    .single();
+                  if (profile) finalUserId = profile.id;
+                }
+
                 if (!sessionId) {
                   const { error: sessionErr } = await supabaseAdmin.from("sessions").insert({
                     id: assessmentId,
-                    user_id: userId || null,
+                    user_id: finalUserId || null,
                     input_method: "interview",
                     status: "completed",
                     started_at: new Date().toISOString(),
