@@ -288,7 +288,8 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
 
               // 7. Send Email to User
               if (userEmail) {
-                await resend.emails.send({
+                console.log(`[Resend Attempt]: Sending to ${userEmail} from ${process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>"}`);
+                const { data: emailData, error: emailError } = await resend.emails.send({
                   from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
                   to: userEmail,
                   subject: `Your Fundability Score is ${score}/100`,
@@ -297,7 +298,13 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
                     band: result.band,
                     reportUrl: reportUrl,
                   }) as React.ReactElement,
-                }).catch(console.error);
+                });
+
+                if (emailError) {
+                  console.error("[Resend Error]:", emailError);
+                } else {
+                  console.log("[Resend Success]:", emailData);
+                }
               }
 
               // 8. Fire debate engine (async, non-blocking)
