@@ -6,6 +6,7 @@ import { trackEvent } from "@/lib/analytics";
 import { sendTelegramAlert } from "@/lib/telegram";
 import { resend } from "@/lib/resend";
 import DiagnosticCompleteEmail from "@/components/emails/DiagnosticCompleteEmail";
+import React from "react";
 
 export const runtime = "nodejs";
 
@@ -19,83 +20,27 @@ const supabaseAdmin =
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Fetch active logic overrides and check if any trigger_text appears in the answers.
- * Returns a list of correction_rule strings that matched.
- */
 async function getMatchingOverrides(answersJson: string): Promise<string[]> {
   if (!supabaseAdmin) return [];
   try {
-    const { data } = await supabaseAdmin
-      .from("logic_overrides")
-      .select("id, trigger_text, correction_rule, applied_count")
-      .eq("is_active", true);
-
+    const { data } = await supabaseAdmin.from("logic_overrides").select("*").eq("is_active", true);
     if (!data) return [];
-
-    const lowerAnswers = answersJson.toLowerCase();
-    const matched: { id: string; rule: string }[] = [];
-
-    for (const override of data) {
-      if (lowerAnswers.includes(override.trigger_text)) {
-        matched.push({ id: override.id, rule: override.correction_rule });
-        // Fire-and-forget: increment applied_count
-        void supabaseAdmin
-          .from("logic_overrides")
-          .update({ applied_count: (override.applied_count || 0) + 1 })
-          .eq("id", override.id)
-          .then(() => {}, () => {});
-      }
-    }
-    return matched.map((m) => m.rule);
-  } catch {
+    return data.filter((row) => answersJson.toLowerCase().includes(row.trigger_text.toLowerCase())).map((row) => row.correction_rule);
+  } catch (e) {
+    console.error("[Overrides Error]:", e);
     return [];
   }
 }
 
-/**
- * Fetch the active prompt version name for logging.
- */
-async function getActivePromptVersion(): Promise<string> {
-  if (!supabaseAdmin) return "v1-baseline";
-  try {
-    const { data } = await supabaseAdmin
-      .from("prompt_versions")
-      .select("version_name")
-      .eq("is_active", true)
-      .single();
-    return data?.version_name || "v1-baseline";
-  } catch {
-    return "v1-baseline";
-  }
-}
-
-/**
- * Log the interaction asynchronously (non-blocking).
- */
-async function logInteraction(payload: {
-  assessment_id: string;
-  prompt_version: string;
-  input_context: string;
-  final_output: object;
-  reasoning_trace: string;
-  tokens_used: number;
-}) {
+async function logInteraction(data: any) {
   if (!supabaseAdmin) return;
   try {
-    await supabaseAdmin.from("ai_interaction_logs").insert({
-      ...payload,
-      model_used: MODELS.ANALYSIS,
-    });
+    await supabaseAdmin.from("analytics_logs").insert(data);
   } catch (e) {
     console.error("[AI Log Error]:", e);
   }
 }
 
-/**
- * Fire debate engine as a truly async background task (fire-and-forget).
- * The user's stream is NEVER delayed by this.
- */
 function fireDebateEngine(assessmentId: string, context: string, primaryScore: number) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -117,46 +62,24 @@ function fireDebateEngine(assessmentId: string, context: string, primaryScore: n
 export async function POST(req: NextRequest) {
   try {
     const { answers, sessionId, userId, userEmail } = await req.json();
-
-    if (!answers) {
-      return new Response(JSON.stringify({ error: "answers is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const answersJson = JSON.stringify(answers, null, 2);
     const assessmentId = sessionId || crypto.randomUUID();
-
-    // ── Fetch context: overrides + prompt version ─────────────────────────────
-    const [matchedOverrides, promptVersion] = await Promise.all([
-      getMatchingOverrides(answersJson),
-      getActivePromptVersion(),
-    ]);
-
-    // ── Build system prompt with any applicable correction rules ─────────────
-    let systemPrompt = SCORING_SYSTEM_PROMPT;
-    if (matchedOverrides.length > 0) {
-      const overrideBlock = matchedOverrides
-        .map((rule, i) => `[Expert Override #${i + 1}]: ${rule}`)
-        .join("\n");
-      systemPrompt = `${overrideBlock}\n\n---\n\n${systemPrompt}`;
-    }
-
+    const answersJson = JSON.stringify(answers);
+    const matchedOverrides = await getMatchingOverrides(answersJson);
     const anthropic = getAnthropicClient();
-    const prompt = `Here is the founder's interview data. Score this startup according to the rubric.
+    const promptVersion = "v1.2-core";
 
-INTERVIEW DATA:
-${answersJson}
+    const systemPrompt = `${SCORING_SYSTEM_PROMPT}\n\nCRITICAL OVERRIDES:\n${
+      matchedOverrides.length > 0 
+        ? matchedOverrides.join("\n") 
+        : "None. Follow standard scoring weights."
+    }`;
 
-Remember: output ONLY the JSON schema. No preamble, no explanation.`;
+    const prompt = `Assess this startup diagnostic:\n${answersJson}\n\nRemember: output ONLY JSON.`;
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = "";
-        let totalTokens = 0;
-
         try {
           const anthropicStream = await anthropic.messages.stream({
             model: MODELS.ANALYSIS,
@@ -167,179 +90,108 @@ Remember: output ONLY the JSON schema. No preamble, no explanation.`;
           });
 
           for await (const chunk of anthropicStream) {
-            if (
-              chunk.type === "content_block_delta" &&
-              chunk.delta.type === "text_delta"
-            ) {
+            if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
               const text = chunk.delta.text;
               fullResponse += text;
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ delta: text })}\n\n`)
-              );
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: text })}\n\n`));
             }
           }
 
-          // ── Post-stream processing (non-blocking for the stream closure) ───
-          try {
-            const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const result = JSON.parse(jsonMatch[0]);
-              const score: number = result.score || 0;
-              const reportId = crypto.randomUUID();
-              const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : "http://localhost:3000";
-              const reportUrl = `${baseUrl}/report/${reportId}`;
+          // ── PROCESS RESULTS ──
+          const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch && supabaseAdmin) {
+            const result = JSON.parse(jsonMatch[0]);
+            const score: number = result.score || 0;
+            const reportId = crypto.randomUUID();
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : "http://localhost:3000";
+            const reportUrl = `${baseUrl}/report/${reportId}`;
 
-              // 1. Ensure session exists (must be first for foreign keys)
-              if (supabaseAdmin) {
-                let finalUserId = userId;
+            // 1. Resolve User ID (Smart Link)
+            let finalUserId = userId;
+            if (!finalUserId && userEmail) {
+              const { data: profile } = await supabaseAdmin.from("profiles").select("id").eq("email", userEmail).single();
+              if (profile) finalUserId = profile.id;
+            }
 
-                // SMART LINKING: If userId is missing but we have an email, look up the user
-                if (!finalUserId && userEmail) {
-                  const { data: profile } = await supabaseAdmin
-                    .from("profiles")
-                    .select("id")
-                    .eq("email", userEmail)
-                    .single();
-                  if (profile) finalUserId = profile.id;
-                }
+            // 2. Save Session & Report (SEQUENTIAL)
+            await supabaseAdmin.from("sessions").upsert({
+              id: assessmentId,
+              user_id: finalUserId || null,
+              status: "completed",
+              completed_at: new Date().toISOString()
+            });
 
-                if (!sessionId) {
-                  const { error: sessionErr } = await supabaseAdmin.from("sessions").insert({
-                    id: assessmentId,
-                    user_id: finalUserId || null,
-                    input_method: "interview",
-                    status: "completed",
-                    started_at: new Date().toISOString(),
-                    completed_at: new Date().toISOString()
-                  });
-                  if (sessionErr && sessionErr.code !== '23505') console.error("Session Insert Error:", sessionErr);
-                } else {
-                  const { error: sessionUpdateErr } = await supabaseAdmin.from("sessions").update({ 
-                    status: "completed", 
-                    completed_at: new Date().toISOString() 
-                  }).eq("id", assessmentId);
-                  if (sessionUpdateErr) console.error("Session Update Error:", sessionUpdateErr);
-                }
-              }
+            await supabaseAdmin.from("reports").insert({
+              id: reportId,
+              session_id: assessmentId,
+              user_id: finalUserId || null,
+              score,
+              band: result.band,
+              component_scores: result.component_scores,
+              top_3_gaps: result.top_3_gaps,
+              financial_snapshot: result.financial_snapshot,
+              investor_loves: result.investor_loves,
+              investor_concerns: result.investor_concerns,
+              action_items: result.action_items,
+              summary_paragraph: result.summary_paragraph,
+              full_json: result
+            });
 
-              // 2. Telegram notification
-              await sendTelegramAlert(
-                `🤖 <b>AI Assessment Completed</b>\nScore: ${score}/100 (${result.band})\nTop Gap: ${result.top_3_gaps?.[0]?.dimension || "N/A"}\nOverrides Applied: ${matchedOverrides.length}`
-              ).catch(console.error);
-
-              // 3. Track event
-              await trackEvent("assessment_completed", {
-                sessionId: assessmentId,
-                score,
-                eventData: { band: result.band, prompt_version: promptVersion },
-              }).catch(console.error);
-
-              // 4. Log interaction with reasoning trace
-              await logInteraction({
-                assessment_id: assessmentId,
-                prompt_version: promptVersion,
-                input_context: answersJson,
-                final_output: result,
-                reasoning_trace: `Prompt version: ${promptVersion}\nOverrides applied: ${matchedOverrides.length}\nFinal JSON:\n${jsonMatch[0]}`,
-                tokens_used: totalTokens,
-              }).catch(console.error);
-
-              if (supabaseAdmin) {
-
-                // 5. Persist to Reports table
-                const { error: reportErr } = await supabaseAdmin
-                  .from("reports")
-                  .insert({
-                    id: reportId,
-                    session_id: assessmentId,
-                    user_id: userId || null,
-                    score: score,
-                    band: result.band,
-                    component_scores: result.component_scores,
-                    top_3_gaps: result.top_3_gaps,
-                    financial_snapshot: result.financial_snapshot,
-                    team_overview: result.team_overview,
-                    investor_loves: result.investor_loves,
-                    investor_concerns: result.investor_concerns,
-                    action_items: result.action_items,
-                    summary_paragraph: result.summary_paragraph,
-                  });
-                if (reportErr) console.error("Report Insert Error:", reportErr);
-
-                // 6. Update prompt_versions stats
-                await supabaseAdmin
-                  .from("prompt_versions")
-                  .select("completions, avg_score")
-                  .eq("version_name", promptVersion)
-                  .single()
-                  .then(async ({ data: pv }) => {
-                    if (!pv) return;
-                    const newCompletions = (pv.completions || 0) + 1;
-                    const newAvg =
-                      ((pv.avg_score || 0) * (newCompletions - 1) + score) / newCompletions;
-                    await supabaseAdmin!
-                      .from("prompt_versions")
-                      .update({ completions: newCompletions, avg_score: newAvg })
-                      .eq("version_name", promptVersion);
-                  }).catch(console.error);
-              }
-
-              // 7. Send Email to User
-              if (userEmail) {
-                console.log(`[Resend Attempt]: Sending to ${userEmail} from ${process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>"}`);
-                const { data: emailData, error: emailError } = await resend.emails.send({
-                  from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
-                  to: userEmail,
-                  subject: `Your Fundability Score is ${score}/100`,
-                  react: DiagnosticCompleteEmail({
-                    score: score,
-                    band: result.band,
-                    reportUrl: reportUrl,
-                  }) as React.ReactElement,
+            // 3. BACKGROUND TASKS (Non-blocking)
+            (async () => {
+              try {
+                // Telegram
+                await sendTelegramAlert({
+                  type: "diagnostic_completed",
+                  user_email: userEmail || "anonymous@user.com",
+                  score,
+                  band: result.band,
+                  report_url: reportUrl
                 });
 
-                if (emailError) {
-                  console.error("[Resend Error]:", emailError);
-                } else {
-                  console.log("[Resend Success]:", emailData);
+                // Email
+                if (userEmail) {
+                  const { data: emailData, error: emailError } = await resend.emails.send({
+                    from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
+                    to: userEmail,
+                    subject: `Your Fundability Score is ${score}/100`,
+                    react: DiagnosticCompleteEmail({ score, band: result.band, reportUrl }) as React.ReactElement,
+                  });
+                  if (emailError) console.error("[Resend Error]:", emailError);
                 }
-              }
 
-              // 8. Fire debate engine (async, non-blocking)
-              fireDebateEngine(assessmentId, answersJson, score);
-            }
-          } catch (e) {
-            console.error("[Scoring Post-Processing Error]:", e);
+                // Analytics
+                await trackEvent("assessment_completed", { sessionId: assessmentId, score, userId: finalUserId });
+                await logInteraction({
+                  assessment_id: assessmentId,
+                  final_output: result,
+                  tokens_used: 0
+                });
+                
+                fireDebateEngine(assessmentId, answersJson, score);
+              } catch (bgErr) {
+                console.error("[BG Tasks Error]:", bgErr);
+              }
+            })();
           }
 
           controller.enqueue(encoder.encode('data: {"done": true}\n\n'));
           controller.close();
-        } catch (err: unknown) {
-          console.error("[Scoring Stream Error]:", err);
-          const errorMessage =
-            err instanceof Error ? err.message : "Scoring stream error";
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
-          );
+        } catch (err: any) {
+          console.error("[Stream Error]:", err);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
           controller.close();
         }
       },
     });
 
     return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
     });
-  } catch (err: unknown) {
-    console.error("[Scoring API Error]:", err);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (err: any) {
+    console.error("[API Error]:", err);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
   }
 }
