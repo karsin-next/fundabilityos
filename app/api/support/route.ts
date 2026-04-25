@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { Database } from "@/lib/supabase/types";
-
-// Admin/Server-side client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -71,8 +65,8 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Fire-and-forget relay to Telegram
-  const token = process.env.TELEGRAM_BOT_TOKEN || "8723177584:AAEP7S14my6W6ABBSQ1bCgj5hLxMZ-L14eo";
-  const chatId = process.env.TELEGRAM_CHAT_ID || "995198028";
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
   
   if (token && chatId) {
     const formattedMessage = `🚨 <b>New Support Chat</b>\nUser: ${email || "Anonymous"}\n\n${content}`;
