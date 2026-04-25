@@ -3,28 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
+  const { user } = useUser();
 
   // Hide Navbar only on deep interview/checkout flows, keep it on dashboard for global navigation
   const hideNavRoutes = ["/interview", "/upload", "/checkout"];
   const shouldHide = hideNavRoutes.some((route) => pathname?.startsWith(route));
   if (shouldHide) return null;
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setMenuOpen(false);
-    router.push("/");
-    router.refresh();
-  };
 
   return (
     <header className="sticky top-0 z-50 bg-[#022f42] py-3 px-6 md:px-8 border-b-[3px] border-[#ffd800] w-full">
@@ -76,23 +67,25 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-4 ml-0 md:ml-4 flex-col md:flex-row mt-4 md:mt-0">
-            {user ? (
-              <>
-                <Link
-                  href={user.role === "investor" ? "/investor/dashboard" : "/dashboard"}
-                  onClick={() => setMenuOpen(false)}
-                  className="bg-[#ffd800] border-2 border-[#ffd800] text-[#022f42] hover:bg-transparent hover:text-[#ffd800] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center shadow-md"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-transparent border-2 border-[#ffd800] text-[#ffd800] hover:bg-[#ffd800] hover:text-[#022f42] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center"
-                >
-                  Logout
-                </button>
-              </>
-            ) : null}
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="bg-[#ffd800] border-2 border-[#ffd800] text-[#022f42] hover:bg-transparent hover:text-[#ffd800] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center shadow-md"
+              >
+                Dashboard
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            <SignedOut>
+               <Link
+                href="/sign-in"
+                onClick={() => setMenuOpen(false)}
+                className="bg-[#ffd800] border-2 border-[#ffd800] text-[#022f42] hover:bg-transparent hover:text-[#ffd800] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center shadow-md"
+              >
+                Login
+              </Link>
+            </SignedOut>
           </div>
         </nav>
       </div>

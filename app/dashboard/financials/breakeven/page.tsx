@@ -12,11 +12,11 @@ import Link from "next/link";
 import { 
   AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 
 export default function BreakevenPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [step, setStep] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

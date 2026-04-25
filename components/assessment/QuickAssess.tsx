@@ -6,7 +6,7 @@ import { ArrowRight, RotateCcw, ChevronRight } from "lucide-react";
 import ProgressTracker from "@/components/chat/ProgressTracker";
 import ScoreGaugeMock from "@/components/score/ScoreGaugeMock";
 import type { ScoringResult } from "@/lib/scoring";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 type InterviewState = "idle" | "loading_question" | "answering" | "scoring" | "done" | "error";
 
@@ -34,7 +34,7 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeQuestion, setActiveQuestion] = useState<ActiveQuestion | null>(null);
   const [coveredDimensions, setCoveredDimensions] = useState<string[]>([]);
-  const { user } = useAuth();
+  const { user } = useUser();
   
   const [customInput, setCustomInput] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -144,7 +144,7 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
         body: JSON.stringify({ 
           answers: structuredData,
           userId: user?.id,
-          userEmail: user?.email
+          userEmail: user?.primaryEmailAddress?.emailAddress
         }),
       });
       if (!res.ok) throw new Error("Analysis failed");

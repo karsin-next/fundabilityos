@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BookOpen, TrendingUp, Users, Zap, ArrowRight, ShieldCheck, Clock } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 const ACADEMY_ARTICLES = [
   {
@@ -35,7 +35,7 @@ const ACADEMY_ARTICLES = [
 ];
 
 export default function AcademyPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   
   return (
     <div className="bg-[#fcfcfc] min-h-screen">

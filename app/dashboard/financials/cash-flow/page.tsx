@@ -8,11 +8,11 @@ import {
   ArrowRight, ArrowLeft,
   ArrowUpCircle, ArrowDownCircle
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CashFlowPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [step, setStep] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

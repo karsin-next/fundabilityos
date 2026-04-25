@@ -3,10 +3,10 @@
 import { DynamicAuditComponent } from "@/components/assessment/DynamicAuditComponent";
 import { Activity, ArrowLeft, Target, ShieldAlert, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 export default function ScoreOverviewPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   
   // Custom interactive initial seed for the Score discussion to mimic a "Term Sheet Simulator"
   const scoreSeedOptions = [

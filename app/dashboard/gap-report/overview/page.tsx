@@ -3,10 +3,10 @@
 import { DynamicAuditComponent } from "@/components/assessment/DynamicAuditComponent";
 import { AlertTriangle, ArrowLeft, Target, ShieldAlert, ChevronRight, FileSearch } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 export default function GapReportOverviewPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   
   // Custom interactive initial seed for the Negotiation Defense Engine
   const defenseSeedOptions = [

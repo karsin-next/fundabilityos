@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, ShieldCheck, Lock, AlertCircle, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 interface Message {
   id: string;
@@ -19,7 +19,7 @@ interface MediatedChatCenterProps {
 }
 
 export default function MediatedChatCenter({ chatId, recipientName, recipientRole }: MediatedChatCenterProps) {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);

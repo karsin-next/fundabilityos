@@ -6,7 +6,7 @@ import {
   UserPlus, Search
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,7 +16,7 @@ const investorModules = [
 ];
 
 export default function InvestorTargetingHubPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [modules, setModules] = useState(investorModules);
   const [overallProgress, setOverallProgress] = useState(0);
   const supabase = createClient();

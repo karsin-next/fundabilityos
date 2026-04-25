@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Users, Filter, CheckCircle2, Copy, Send, Mail, Briefcase, Zap, Radar, DollarSign } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 
 type InvestorMatch = {
@@ -17,7 +17,7 @@ type InvestorMatch = {
 };
 
 export default function VCMatcherPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [investors, setInvestors] = useState<InvestorMatch[]>([]);
   const [startupProfile, setStartupProfile] = useState<Record<string, any> | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);

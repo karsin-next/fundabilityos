@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, isLoaded: loading } = useUser();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 

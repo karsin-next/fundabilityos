@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import FooterWrapper from "@/components/layout/FooterWrapper";
-import { AuthProvider } from "@/context/AuthContext";
+// removed AuthProvider import
 import ChatWidget from "@/components/support/ChatWidget";
 
 export const metadata: Metadata = {
@@ -44,21 +44,23 @@ export const metadata: Metadata = {
   },
 };
 
+import { ClerkProvider } from "@clerk/nextjs";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
+    <ClerkProvider>
+      <html lang="en">
+        <body>
           <Navbar />
           <main>{children}</main>
           <FooterWrapper />
           <ChatWidget />
-        </AuthProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -9,7 +9,7 @@ import QuickAssess from "@/components/assessment/QuickAssess";
 import ScoreDashboard from "@/components/assessment/ScoreDashboard";
 import PitchDeckUploader from "@/components/upload/PitchDeckUploader";
 import LeadCaptureGate from "@/components/auth/LeadCaptureGate";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 import type { ScoringResult } from "@/lib/scoring";
 
@@ -237,7 +237,7 @@ function PricingTabs() {
 }
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [showAssessment, setShowAssessment] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [scoringResult, setScoringResult] = useState<ScoringResult | null>(null);

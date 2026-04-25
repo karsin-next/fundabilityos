@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Users, Zap, ExternalLink } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 
 /**
  * Article Data Store
@@ -90,7 +90,7 @@ const ACADEMY_DB: Record<string, any> = {
 import { use } from "react";
 
 export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { user } = useAuth();
+  const { user } = useUser();
   const resolvedParams = use(params);
   const article = ACADEMY_DB[resolvedParams.slug];
 

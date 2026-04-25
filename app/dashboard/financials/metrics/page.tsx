@@ -13,7 +13,7 @@ import Link from "next/link";
 import { 
   BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from "recharts";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/client";
 
 const METRIC_LIBRARY = [
@@ -27,7 +27,7 @@ const METRIC_LIBRARY = [
 ];
 
 export default function FinancialMetricsPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [step, setStep] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

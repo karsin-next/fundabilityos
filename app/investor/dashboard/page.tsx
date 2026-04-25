@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { 
   Zap, Users, TrendingUp, ShieldCheck, 
   ArrowUpRight, MessageSquare, Filter, Search,
@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
 export default function InvestorDashboard() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [startups, setStartups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();

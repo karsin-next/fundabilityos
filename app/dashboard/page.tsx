@@ -6,7 +6,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TractionTracker } from "@/components/dashboard/TractionTracker";
@@ -23,7 +23,7 @@ const subModules = [
 ];
 
 export default function AuditHubPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [modules, setModules] = useState(subModules);
   const [recentScore, setRecentScore] = useState<number | null>(null);
   const supabase = createClient();

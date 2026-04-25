@@ -6,7 +6,7 @@ import {
   ArrowRight, RefreshCcw, Landmark
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,7 +17,7 @@ const financialModules = [
 ];
 
 export default function FinancialsHubPage() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [modules, setModules] = useState(financialModules);
   const [overallProgress, setOverallProgress] = useState(0);
   const [runway, setRunway] = useState<number | null>(null);
