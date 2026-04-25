@@ -8,7 +8,7 @@
 - **Goal**: Understand gaps, improve score, get intro to right investors
 - **Journey**: Landing page → 12-question interview → Score + Report → Unlock ($29) → Growth Plan
 
-### Persona 2: The Institutional Investor (Paid User)
+### Persona 2: The Sophisticated Investor (Paid User)
 - **Who**: VC associates, angel groups, family offices
 - **Pain**: Too much time spent screening unqualified deal flow
 - **Goal**: See only fundable startups, give quick feedback
