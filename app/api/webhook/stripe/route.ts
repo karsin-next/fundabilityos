@@ -8,11 +8,7 @@ import { resend } from "@/lib/resend";
 import { ReportUnlockedEmail } from "@/components/emails/ReportUnlockedEmail";
 
 
-// We must securely bypass RLS to update the report using the service role key
-// Fallback gracefully during static builds when env vars may be missing
-const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  : null;
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   const body = await req.text();

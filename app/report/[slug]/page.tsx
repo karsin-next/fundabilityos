@@ -4,8 +4,10 @@ import Link from "next/link";
 import { Home, Share2, CheckCircle, AlertTriangle, Lock, FileDown } from "lucide-react";
 import UnlockButton from "@/components/report/UnlockButton";
 import ScoreGaugeMock from "@/components/score/ScoreGaugeMock";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
-// Create client safely so demo preview works even if env vars are missing
+// Create client with service role for administrative access
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : null;
@@ -20,44 +22,27 @@ export default async function ReportPage({ params }: PageProps) {
   let reportData: any = null;
   let isUnlocked = false;
 
-  // For UI preview purposes without DB setup overhead, we'll use a mocked demo dataset
+  // 1. Fetch Report Data
   if (slug === "demo") {
-    // Generate some fake component scores to match standard type
     const componentScores = {
-      problem_clarity: 12,
-      revenue: 5,
-      runway: 15,
-      team_size: 8,
-      product_stage: 9,
-      previous_funding: 0,
-      market_size: 8,
-      ai_confidence: 9,
+      problem_clarity: 12, revenue: 5, runway: 15, team_size: 8,
+      product_stage: 9, previous_funding: 0, market_size: 8, ai_confidence: 9,
     };
     reportData = {
       id: "demo-report-123",
       score: 66,
       band: "Early-Stage",
-      summary_paragraph: "Your team has great problem definition and early product validation, but revenue scaling and previous funding gaps are making this a tougher sell for Seed investors right now.",
-      top_3_gaps: [
-        { dimension: "Revenue", priority: "high", max: 20, score: 5, explanation: "Pre-revenue or minimal early MRR.", fix: "Demonstrate 3 paid pilots." }
-      ],
+      summary_paragraph: "Demo report for preview purposes.",
+      top_3_gaps: [{ dimension: "Revenue", priority: "high", max: 20, score: 5, explanation: "Pre-revenue.", fix: "Fix revenue." }],
       component_scores: componentScores,
       financial_snapshot: { burn_rate: "$5k", runway_months: "8 months" },
-      action_items: [
-        { week: 1, action: "Finalize pricing tier", impact: "Validates unit economics" },
-        { week: 2, action: "Launch paid beta", impact: "Converts free users" },
-        { week: 3, action: "Draft Seed deck", impact: "Tying traction to vision" },
-        { week: 4, action: "Target 10 angels", impact: "Early commit pipeline" }
-      ],
-      investor_loves: ["Strong founding team synergy", "Clear problem definition"],
-      investor_concerns: ["Zero prior institutional funding", "Low barrier to entry"]
+      action_items: [{ week: 1, action: "Finalize pricing", impact: "Validates economics" }],
+      investor_loves: ["Strong team"],
+      investor_concerns: ["Zero funding"]
     };
-    // Mock the locked behavior based on query param but let's default to locked to show the UI
     isUnlocked = false;
   } else {
-    // Real DB fetch
     if (!supabase) throw new Error("Supabase is not configured.");
-    
     const { data } = await supabase.from("reports").select("*").eq("id", slug).single();
     if (!data) {
       return (
@@ -68,6 +53,33 @@ export default async function ReportPage({ params }: PageProps) {
     }
     reportData = data;
     isUnlocked = data.is_unlocked;
+  }
+
+  // 2. ADMIN & OWNER BYPASS
+  // Check if current user should see the full report
+  try {
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    );
+    
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (user && supabase) {
+      // Bypass if owner
+      if (user.id === reportData.user_id) {
+        isUnlocked = true;
+      } else {
+        // Bypass if admin
+        const { data: profile } = await supabase.from("profiles").select("is_admin, role").eq("id", user.id).single();
+        if (profile?.is_admin || profile?.role === 'admin') {
+          isUnlocked = true;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[Report Auth Bypass Error]:", e);
   }
 
   return (
@@ -100,58 +112,80 @@ export default async function ReportPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="container" style={{ maxWidth: "800px", marginTop: "3rem" }}>
-        
-        {/* FREE PREVIEW SECTION */}
-        <div className="card-bento-light" style={{ marginBottom: "2rem" }}>
-          <h1 className="heading-section" style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
-            Investor Readiness Assessment
-          </h1>
-          <p style={{ color: "rgba(2,47,66,0.6)", marginBottom: "2rem", fontSize: "0.9rem" }}>
-            {reportData.summary_paragraph}
-          </p>
-          
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "center", padding: "2rem", backgroundColor: "var(--navy)", borderRadius: "8px", color: "white" }} className="result-header-grid">
-            <div style={{ textAlign: "center" }}>
-              <ScoreGaugeMock score={reportData.score} band={reportData.band} />
-            </div>
-            <div>
-              <p className="label-mono" style={{ color: "var(--yellow)", marginBottom: "0.875rem" }}>Core Gaps Identified</p>
-              {(reportData as any).top_3_gaps?.map((gap: any, i: number) => (
-                <div key={i} style={{ padding: "0.75rem", borderLeft: `3px solid var(--red)`, backgroundColor: "rgba(255,255,255,0.05)", marginBottom: "0.5rem", borderRadius: "0 4px 4px 0" }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700 }}>{gap.dimension}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* LOCKED OR UNLOCKED PRO SECTION */}
+      <div className="container" style={{ marginTop: "3rem" }}>
         <div style={{ position: "relative" }}>
-          <div className={!isUnlocked ? "content-blurred" : ""} style={{ display: "grid", gap: "2rem" }}>
+          <div style={{ filter: isUnlocked ? "none" : "blur(10px)", pointerEvents: isUnlocked ? "auto" : "none", opacity: isUnlocked ? 1 : 0.4 }}>
             
-            <div className="card-bento-light">
-              <h3 className="heading-card" style={{ marginBottom: "1.5rem" }}>Deep Dive Analysis</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-                <div style={{ backgroundColor: "rgba(2,47,66,0.03)", padding: "1.5rem", borderRadius: "4px" }}>
-                  <p className="label-mono" style={{ color: "var(--green)", marginBottom: "1rem" }}>Investors Will Love</p>
-                  {reportData.investor_loves?.map((l: string, i: number) => (
-                    <p key={i} style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "flex", gap: "0.5rem" }}><CheckCircle size={16} color="var(--green)" /> {l}</p>
-                  ))}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "2.5rem", alignItems: "start" }} className="report-grid">
+              <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+                <div className="card-bento-light">
+                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+                     <div>
+                        <h1 className="heading-section" style={{ fontSize: "2.5rem", color: "var(--navy)" }}>{reportData.score}<span style={{ fontSize: "1rem", opacity: 0.3 }}>/100</span></h1>
+                        <p style={{ fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--amber)", fontSize: "0.75rem" }}>{reportData.band} Band</p>
+                     </div>
+                     <div style={{ maxWidth: "400px" }}>
+                        <p style={{ fontSize: "0.95rem", lineHeight: 1.6, color: "rgba(2,47,66,0.8)" }}>{reportData.summary_paragraph}</p>
+                     </div>
+                   </div>
+
+                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1.5rem", paddingTop: "2rem", borderTop: "1px solid rgba(2,47,66,0.05)" }}>
+                      {reportData.investor_loves?.map((love: string, i: number) => (
+                        <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                           <CheckCircle size={18} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                           <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{love}</span>
+                        </div>
+                      ))}
+                   </div>
                 </div>
-                <div style={{ backgroundColor: "rgba(239,68,68,0.05)", padding: "1.5rem", borderRadius: "4px" }}>
-                  <p className="label-mono" style={{ color: "var(--red)", marginBottom: "1rem" }}>Expect Pushback On</p>
-                  {reportData.investor_concerns?.map((c: string, i: number) => (
-                    <p key={i} style={{ fontSize: "0.875rem", marginBottom: "0.5rem", display: "flex", gap: "0.5rem" }}><AlertTriangle size={16} color="var(--red)" /> {c}</p>
-                  ))}
+
+                <div className="card-bento-light">
+                   <h3 className="heading-card" style={{ marginBottom: "1.5rem" }}>Investor Concerns</h3>
+                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {reportData.top_3_gaps?.map((gap: any, i: number) => (
+                        <div key={i} style={{ backgroundColor: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.1)", padding: "1.5rem", borderRadius: "4px" }}>
+                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                              <span style={{ fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.7rem", color: "var(--red)" }}>Gap: {gap.dimension}</span>
+                              <span className="tag-badge" style={{ backgroundColor: "var(--red)", color: "white", fontSize: "0.6rem" }}>{gap.priority} priority</span>
+                           </div>
+                           <p style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.5rem" }}>{gap.explanation}</p>
+                           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", color: "var(--navy)", opacity: 0.6, fontSize: "0.8rem" }}>
+                              <AlertTriangle size={14} /> <strong>Fix:</strong> {gap.fix}
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                <div className="card-bento-light" style={{ textAlign: "center" }}>
+                   <div style={{ width: "160px", height: "160px", margin: "0 auto 1.5rem" }}>
+                      <ScoreGaugeMock score={reportData.score} />
+                   </div>
+                   <h4 style={{ fontWeight: 900, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.1em", opacity: 0.4 }}>QuickAssess Result</h4>
+                </div>
+
+                <div className="card-bento-light">
+                   <h3 className="heading-card" style={{ fontSize: "0.9rem", marginBottom: "1.25rem" }}>Financial Vitals</h3>
+                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                         <span style={{ opacity: 0.5 }}>Monthly Burn</span>
+                         <span style={{ fontWeight: 700 }}>{reportData.financial_snapshot?.burn_rate || "---"}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                         <span style={{ opacity: 0.5 }}>Estimated Runway</span>
+                         <span style={{ fontWeight: 700, color: "var(--red)" }}>{reportData.financial_snapshot?.runway_months || "---"}</span>
+                      </div>
+                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="card-bento-light">
+            <div className="card-bento-light" style={{ marginTop: "2.5rem" }}>
               <h3 className="heading-card" style={{ marginBottom: "1.5rem" }}>30-Day Growth Plan</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {(reportData as any).action_items?.map((item: any) => (
+                {reportData.action_items?.map((item: any) => (
                   <div key={item.week} style={{ border: "1px solid rgba(2,47,66,0.1)", padding: "1.25rem", borderRadius: "4px", display: "flex", gap: "1.25rem" }}>
                     <div style={{ backgroundColor: "var(--navy)", color: "var(--yellow)", width: "36px", height: "36px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>W{item.week}</div>
                     <div>

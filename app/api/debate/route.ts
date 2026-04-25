@@ -5,13 +5,7 @@ import { getAnthropicClient, MODELS } from "@/lib/ai";
 export const runtime = "nodejs";
 export const maxDuration = 120; // Generous timeout — runs async, not user-blocking
 
-const supabaseAdmin =
-  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      )
-    : null;
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 interface DebateRequest {
   assessment_id: string;

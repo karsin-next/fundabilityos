@@ -5,24 +5,7 @@ import { INTERVIEW_SYSTEM_PROMPT, INTERVIEW_QUESTIONS } from "@/lib/prompts";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Simple in-memory rate limiter (per IP, resets per process restart)
-// Production: swap for Redis / Upstash
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const window = 60_000; // 1 minute
-  const maxRequests = 30;
-
-  const entry = rateLimitMap.get(ip) ?? { count: 0, resetAt: now + window };
-  if (now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + window });
-    return true;
-  }
-  if (entry.count >= maxRequests) return false;
-  rateLimitMap.set(ip, { count: entry.count + 1, resetAt: entry.resetAt });
-  return true;
-}
+import { chatRateLimit } from "@/lib/ratelimit";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -31,12 +14,12 @@ export interface ChatMessage {
 
 export async function POST(req: NextRequest) {
   // Rate limit by IP
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "127.0.0.1";
+  const { success, limit, reset, remaining } = await chatRateLimit.limit(ip);
+  if (!success) {
     return new Response(
-      JSON.stringify({ error: "Too many requests. Please slow down." }),
-      { status: 429, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+      { status: 429, headers: { "Content-Type": "application/json", "X-RateLimit-Limit": String(limit), "X-RateLimit-Reset": String(reset) } }
     );
   }
 

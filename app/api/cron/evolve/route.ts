@@ -7,9 +7,7 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 // Create client gracefully to avoid Next.js static build failures when env vars are absent
-const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  : null;
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   try {

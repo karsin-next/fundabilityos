@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAnthropicClient } from "@/lib/ai";
 import { extractAIJSON } from "@/lib/ai-json";
+import { uploadRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const { success, limit, reset, remaining } = await uploadRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later." },
+        { status: 429, headers: { "X-RateLimit-Limit": String(limit), "X-RateLimit-Reset": String(reset) } }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const email = (formData.get("email") as string | null) || "";

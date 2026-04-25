@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { 
   Users,
+  User,
   Search, 
   MoreVertical, 
   Edit2, 
@@ -32,7 +33,6 @@ export default function UserManagementPage() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const supabase = createClient();
 
   useEffect(() => {
     fetchUsers();
@@ -40,14 +40,17 @@ export default function UserManagementPage() {
 
   async function fetchUsers() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*, reports(id, score, band, created_at)")
-      .order("created_at", { ascending: false });
-
-    if (data) setUsers(data);
+    try {
+      const res = await fetch("/api/admin/users");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const data = await res.json();
+      setUsers(data.users || []);
+    } catch (err) {
+      console.error("[Admin Users Fetch Error]:", err);
+    }
     setLoading(false);
   }
+
 
   async function deleteUser(id: string) {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
@@ -146,7 +149,7 @@ export default function UserManagementPage() {
               ) : filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50/80 transition-colors group">
                   <td className="px-6 py-6">
-                    <div className="flex items-center gap-4">
+                    <Link href={`/admin/users/${user.id}`} className="flex items-center gap-4 hover:opacity-70 transition-opacity">
                       <div className="w-10 h-10 bg-[#022f42] rounded-sm flex items-center justify-center text-[#ffd800] font-black text-sm">
                         {user.full_name?.charAt(0) || user.email?.charAt(0)}
                       </div>
@@ -156,7 +159,7 @@ export default function UserManagementPage() {
                           <Mail className="w-3 h-3" /> {user.email}
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-6 font-bold text-sm text-[#022f42]">
                     <div className="flex items-center gap-2">
@@ -173,10 +176,10 @@ export default function UserManagementPage() {
                   </td>
                   <td className="px-6 py-6">
                     {user.reports && user.reports.length > 0 ? (
-                      <div className="flex flex-col">
-                        <span className="font-black text-[#022f42] text-lg">{user.reports[user.reports.length - 1].score}<span className="text-xs text-[#022f42]/40">/100</span></span>
+                      <Link href={`/admin/users/${user.id}`} className="flex flex-col group/score">
+                        <span className="font-black text-[#022f42] text-lg group-hover/score:text-[#ffd800] transition-colors">{user.reports[user.reports.length - 1].score}<span className="text-xs text-[#022f42]/40">/100</span></span>
                         <span className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">{user.reports[user.reports.length - 1].band}</span>
-                      </div>
+                      </Link>
                     ) : (
                       <span className="text-xs font-bold text-[#022f42]/20">No data</span>
                     )}
@@ -189,6 +192,12 @@ export default function UserManagementPage() {
                   </td>
                   <td className="px-6 py-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link 
+                        href={`/admin/users/${user.id}`}
+                        className="p-2 hover:bg-white hover:shadow-md transition-all rounded-sm text-[#ffd800] hover:text-[#ffd800]/80" title="View Founder Insights"
+                      >
+                        <User className="w-4 h-4" />
+                      </Link>
                       {user.reports && user.reports.length > 0 && (
                         <a 
                           href={`/report/${user.reports[user.reports.length - 1].id}`}
@@ -199,6 +208,7 @@ export default function UserManagementPage() {
                           <BarChart3 className="w-4 h-4" />
                         </a>
                       )}
+
                       <button className="p-2 hover:bg-white hover:shadow-md transition-all rounded-sm text-[#022f42]/40 hover:text-[#022f42]" title="Edit User">
                         <Edit2 className="w-4 h-4" />
                       </button>

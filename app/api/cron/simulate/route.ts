@@ -14,13 +14,7 @@ const MONTHLY_BUDGET_CENTS = 1000;
 const PROFILES_PER_BATCH = 20;
 const CALIBRATION_THRESHOLD_PCT = 15; // if >15% score above 75, tighten
 
-const supabaseAdmin =
-  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      )
-    : null;
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 // ── Helper: estimate cost in cents (Sonnet ≈ $3/M input + $15/M output) ────────
 function estimateCostCents(inputTokens: number, outputTokens: number): number {
