@@ -11,17 +11,17 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoaded: loading } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth/login");
+    if (isLoaded && !user) {
+      router.push("/sign-in");
     }
-  }, [user, loading, router]);
+  }, [user, isLoaded, router]);
 
-  if (loading || !user) {
+  if (!isLoaded || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f2f6fa]">
         <div className="flex flex-col items-center gap-4">
