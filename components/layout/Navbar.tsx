@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   // Hide Navbar only on deep interview/checkout flows, keep it on dashboard for global navigation
   const hideNavRoutes = ["/interview", "/upload", "/checkout"];
@@ -67,17 +67,19 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-4 ml-0 md:ml-4 flex-col md:flex-row mt-4 md:mt-0">
-            <SignedIn>
-              <Link
-                href="/dashboard"
-                onClick={() => setMenuOpen(false)}
-                className="bg-[#ffd800] border-2 border-[#ffd800] text-[#022f42] hover:bg-transparent hover:text-[#ffd800] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center shadow-md"
-              >
-                Dashboard
-              </Link>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-            <SignedOut>
+            {isLoaded && user && (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="bg-[#ffd800] border-2 border-[#ffd800] text-[#022f42] hover:bg-transparent hover:text-[#ffd800] px-6 py-2 font-bold text-sm uppercase tracking-widest transition-all text-center shadow-md"
+                >
+                  Dashboard
+                </Link>
+                <UserButton afterSignOutUrl="/" />
+              </>
+            )}
+            {isLoaded && !user && (
                <Link
                 href="/sign-in"
                 onClick={() => setMenuOpen(false)}
@@ -85,7 +87,7 @@ export default function Navbar() {
               >
                 Login
               </Link>
-            </SignedOut>
+            )}
           </div>
         </nav>
       </div>
