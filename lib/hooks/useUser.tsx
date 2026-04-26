@@ -31,16 +31,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialUser();
 
-    // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[Auth Change]:", event, session?.user?.email);
+    // 2. Listen for auth changes and sync cookies
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("[Auth Change Event]:", event);
       setUser(session?.user ?? null);
       setIsLoaded(true);
 
-      // If we just signed in via a fragment/hash, the cookies might not be set yet for the server.
-      // A quick refresh or redirect to dashboard will trigger the middleware to see the new state.
-      if (event === "SIGNED_IN" && window.location.hash) {
-        window.location.href = "/dashboard";
+      // CRITICAL: When the session changes (Login/Logout), we MUST ensure 
+      // the server-side cookies are updated. This tells the Middleware we are logged in.
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // This is a "No-Op" fetch that just triggers the middleware to see the new cookies
+        // which Supabase's client sets automatically in the browser.
+        await fetch("/api/auth/callback?sync=true");
+        
+        // If we have a hash (Implicit Flow), redirect to dashboard now that cookies are synced
+        if (window.location.hash) {
+          window.location.href = "/dashboard";
+        }
+      }
+
+      if (event === "SIGNED_OUT") {
+        window.location.href = "/";
       }
     });
 

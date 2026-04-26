@@ -22,6 +22,11 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
+  // Handle session sync from client (Implicit Flow fallback)
+  if (searchParams.get("sync") === "true") {
+    return NextResponse.json({ synced: true });
+  }
+
   // Handle OAuth error passed in the URL
   if (error) {
     return NextResponse.redirect(
