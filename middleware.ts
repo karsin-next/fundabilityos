@@ -4,8 +4,18 @@ const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)'
 ]);
 
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/admin(.*)',          // Admin has its own secret-based auth
+  '/api/admin(.*)',      // Admin API protected by CRON_SECRET
+  '/api/webhook/(.*)',   // Webhooks are verified by their own signatures
+]);
+
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect()
+  // Only enforce Clerk auth on protected routes
+  if (!isPublicRoute(req) && isProtectedRoute(req)) await auth.protect();
 });
 
 export const config = {

@@ -12,8 +12,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
 
-  // Hide Navbar only on deep interview/checkout flows, keep it on dashboard for global navigation
-  const hideNavRoutes = ["/interview", "/upload", "/checkout"];
+  // Hide Navbar only on deep interview/checkout flows and admin pages
+  const hideNavRoutes = ["/interview", "/upload", "/checkout", "/admin"];
   const shouldHide = hideNavRoutes.some((route) => pathname?.startsWith(route));
   if (shouldHide) return null;
 

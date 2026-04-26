@@ -13,10 +13,15 @@ interface TelegramAlertData {
  */
 export async function sendTelegramAlert(input: string | TelegramAlertData): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  // Support both TELEGRAM_ADMIN_CHAT_ID (preferred) and TELEGRAM_CHAT_ID (legacy)
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
 
-  if (!token || !chatId) {
-    console.warn("Telegram Alert Skipped (Missing Credentials)");
+  if (!token || token.startsWith("7xxxxxxxxxx") || token === "your-bot-token") {
+    console.warn("[Telegram] Skipped: TELEGRAM_BOT_TOKEN is not configured.");
+    return;
+  }
+  if (!chatId || chatId === "123456789") {
+    console.warn("[Telegram] Skipped: TELEGRAM_ADMIN_CHAT_ID is not configured.");
     return;
   }
 
