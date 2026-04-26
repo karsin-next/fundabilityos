@@ -3,7 +3,7 @@
 import { DynamicAuditComponent } from "@/components/assessment/DynamicAuditComponent";
 import { Activity, ArrowLeft, Target, ShieldAlert, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 export default function ScoreOverviewPage() {
   const { user } = useUser();

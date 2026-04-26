@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Users, Filter, CheckCircle2, Copy, Send, Mail, Briefcase, Zap, Radar, DollarSign } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 
 type InvestorMatch = {

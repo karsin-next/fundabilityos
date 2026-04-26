@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { 
   Zap, Users, TrendingUp, ShieldCheck, 
   ArrowUpRight, MessageSquare, Filter, Search,

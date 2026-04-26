@@ -13,7 +13,7 @@ import Link from "next/link";
 import { 
   BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from "recharts";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 
 const METRIC_LIBRARY = [

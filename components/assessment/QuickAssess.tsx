@@ -6,7 +6,7 @@ import { ArrowRight, RotateCcw, ChevronRight } from "lucide-react";
 import ProgressTracker from "@/components/chat/ProgressTracker";
 import ScoreGaugeMock from "@/components/score/ScoreGaugeMock";
 import type { ScoringResult } from "@/lib/scoring";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 type InterviewState = "idle" | "loading_question" | "answering" | "collecting_email" | "scoring" | "done" | "error";
 

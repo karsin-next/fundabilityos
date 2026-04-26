@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, ShieldCheck, Lock, AlertCircle, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 interface Message {
   id: string;

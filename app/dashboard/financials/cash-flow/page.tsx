@@ -8,7 +8,7 @@ import {
   ArrowRight, ArrowLeft,
   ArrowUpCircle, ArrowDownCircle
 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 
 export default function CashFlowPage() {
