@@ -299,6 +299,20 @@ export default function HomePage() {
     hydrateScore();
   }, [user, supabase]);
 
+  // BATTLE-HARDENED: Catch tokens in the URL fragment (Implicit Flow fallback)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      console.log("[Home Page] Detected auth tokens in hash. Attempting to lock in session...");
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          console.log("[Home Page] Session verified. Redirecting to Dashboard...");
+          window.location.href = "/dashboard";
+        }
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [supabase]);
+
   const handleComplete = async (result: ScoringResult) => {
     setScoringResult(result);
     localStorage.setItem(CACHE_KEY, JSON.stringify(result));
