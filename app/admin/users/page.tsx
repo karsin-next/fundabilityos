@@ -100,7 +100,7 @@ export default function AdminUsersPage() {
             value={secretInput}
             onChange={(e) => setSecretInput(e.target.value)}
             placeholder="Enter CRON_SECRET"
-            className="w-full border-2 border-[#022f42]/20 px-4 py-3 text-sm mb-6 focus:border-[#022f42] outline-none"
+            className="w-full border-2 border-[#022f42]/20 px-4 py-3 text-sm mb-6 focus:border-[#022f42] outline-none text-[#022f42]"
           />
           <button type="submit" className="w-full bg-[#022f42] text-[#ffd800] font-black uppercase tracking-widest py-3 text-sm hover:bg-[#ffd800] hover:text-[#022f42] transition-all">
             Access Dashboard
