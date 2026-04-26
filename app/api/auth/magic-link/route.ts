@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
     // 1. Generate the magic link using Supabase Admin
     // We force the redirectTo to our callback endpoint so we can handle cookie exchange
-    const origin = process.env.NEXT_PUBLIC_APP_URL || "";
+    // Use the origin from the request to ensure consistency (www vs non-www)
+    const origin = req.nextUrl.origin;
     const callbackUrl = `${origin}/api/auth/callback`;
     const finalDestination = redirectTo || "/dashboard";
     
