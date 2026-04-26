@@ -51,7 +51,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "1.2 Live Fundability Score",
-        href: "/dashboard/score",
+        href: "/dashboard/score/overview",
         icon: Target,
         children: [
           { name: "1.2.1 Fundability Score", href: "/dashboard/score/overview", icon: Activity },
@@ -62,7 +62,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "1.3 Gap Analysis Report",
-        href: "/dashboard/gap-report",
+        href: "/dashboard/gap-report/overview",
         icon: BarChart3,
         children: [
           { name: "1.3.1 Gap Analysis Report", href: "/dashboard/gap-report/overview", icon: FileText },
@@ -89,7 +89,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "2.2 Investor Dashboard",
-        href: "/dashboard/metrics",
+        href: "#",
         icon: LayoutDashboard,
         children: [
           { name: "2.2.1 Runway & Burn", href: "/dashboard/metrics/runway", icon: Flame },
@@ -99,7 +99,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "2.3 Unit Economics",
-        href: "/dashboard/unit-economics",
+        href: "#",
         icon: LineChart,
         children: [
           { name: "2.3.1 CAC Calculator", href: "/dashboard/unit-economics/cac", icon: Users },
@@ -111,7 +111,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "2.4 Fundraising Strategy Canvas",
-        href: "/dashboard/strategy",
+        href: "#",
         icon: Map,
         children: [
           { name: "2.4.1 WHAT: Capital Needs", href: "/dashboard/strategy/what", icon: DollarSign },
@@ -124,7 +124,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "2.5 Data Room Builder",
-        href: "/dashboard/data-room",
+        href: "#",
         icon: FolderOpen,
         children: [
           { name: "2.5.1 Structure Template", href: "/dashboard/data-room/structure", icon: Folders },
@@ -141,7 +141,7 @@ const siteMap: NavSection[] = [
     items: [
       {
         name: "3.1 Gap Closure Workbench",
-        href: "/dashboard/workbench",
+        href: "#",
         icon: Activity,
         children: [
           { name: "3.1.1 Personalised Action Plan", href: "/dashboard/workbench/plan", icon: CheckSquare },
@@ -160,7 +160,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "3.3 Visibility & Verification",
-        href: "/dashboard/visibility",
+        href: "#",
         icon: Eye,
         children: [
           { name: "3.3.1 Profile Visibility", href: "/dashboard/visibility/toggle", icon: Eye },
@@ -174,7 +174,7 @@ const siteMap: NavSection[] = [
     items: [
       {
         name: "4.1 Term Sheet Mastery",
-        href: "/dashboard/term-sheet",
+        href: "#",
         icon: FileSearch,
         children: [
           { name: "4.1.1 Term Sheet Anatomy", href: "/dashboard/term-sheet/anatomy", icon: FileText },
@@ -185,7 +185,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "4.2 Due Diligence Simulator",
-        href: "/dashboard/dd-simulator",
+        href: "#",
         icon: Search,
         children: [
           { name: "4.2.1 Legal DD Checklist", href: "/dashboard/dd-simulator/legal", icon: Briefcase },
@@ -196,7 +196,7 @@ const siteMap: NavSection[] = [
       },
       {
         name: "4.3 Negotiation Playbook",
-        href: "/dashboard/negotiation",
+        href: "#",
         icon: FileText,
         children: [
           { name: "4.3.1 Deal-Breaker Builder", href: "/dashboard/negotiation/deal-breakers", icon: CheckSquare },
@@ -233,8 +233,9 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const { user, signOut } = useUser();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => pathname === href && href !== "#";
   const isAnyChildActive = (children?: { href: string }[]) =>
     children?.some(c => pathname === c.href) ?? false;
 
@@ -252,6 +253,12 @@ export function DashboardSidebar() {
 
   const toggleSection = (label: string) => {
     setExpandedSection(prev => prev === label ? null : label);
+  };
+  
+  const toggleItem = (name: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpandedItems(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
   return (
@@ -318,12 +325,23 @@ export function DashboardSidebar() {
                   {section.items.map((item) => {
                     const active = isActive(item.href);
                     const childActive = isAnyChildActive(item.children);
+                    const isItemExpanded = active || childActive || expandedItems[item.name];
 
                     return (
-                      <div key={item.href}>
+                      <div key={item.name}>
                         {/* Top-level item */}
                         <Link
                           href={item.href}
+                          onClick={(e) => {
+                            if (item.href === "#" || item.children) {
+                              toggleItem(item.name, e);
+                              // Only prevent default if it's a dead link
+                              // If it has a real href, we toggle AND navigate.
+                              if (item.href === "#") {
+                                e.preventDefault();
+                              }
+                            }
+                          }}
                           className={`flex items-center justify-between px-2.5 py-2 rounded-sm transition-colors text-[12px] group ${
                             active
                               ? "bg-[#1b4f68] text-[#ffd800] font-black"
@@ -341,14 +359,23 @@ export function DashboardSidebar() {
                               <span className="text-[7px] font-black uppercase tracking-widest text-[#ffd800]/50 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">Soon</span>
                             )}
                             {item.children && (
-                              <ChevronRight className={`w-3 h-3 transition-transform ${childActive ? "rotate-90 text-[#ffd800]" : "text-white/30"}`} />
+                              <button 
+                                onClick={(e) => toggleItem(item.name, e)}
+                                className="p-0.5 hover:bg-white/10 rounded-sm transition-colors"
+                              >
+                                <ChevronRight className={`w-3 h-3 transition-transform ${isItemExpanded ? "rotate-90 text-[#ffd800]" : "text-white/30"}`} />
+                              </button>
                             )}
                           </div>
                         </Link>
 
                         {/* Sub-items (level 2) */}
-                        {item.children && (active || childActive) && (
-                          <div className="ml-3 mt-1 mb-2 border-l border-[#1b4f68]/60 pl-2 space-y-0.5">
+                        {item.children && (
+                          <div 
+                            className={`ml-3 mt-1 mb-2 border-l border-[#1b4f68]/60 pl-2 space-y-0.5 overflow-hidden transition-all duration-200 ${
+                              isItemExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 pointer-events-none !mt-0 !mb-0"
+                            }`}
+                          >
                             {item.children.map((child: NavItem) => {
                               const childIsActive = isActive(child.href);
                               return (
