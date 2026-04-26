@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createServiceClient } from "@/lib/supabase/server";
+import { sendTelegramAlert } from "@/lib/telegram";
+import { resend } from "@/lib/resend";
+import { WelcomeEmail } from "@/components/emails/WelcomeEmail";
+import React from "react";
 
 /**
  * OAuth and Email Magic Link callback handler.
@@ -20,7 +24,7 @@ export async function GET(request: NextRequest) {
   // Handle OAuth error passed in the URL
   if (error) {
     return NextResponse.redirect(
-      `${origin}/auth/login?error=${encodeURIComponent(errorDescription || error)}`
+      `${origin}/login?error=${encodeURIComponent(errorDescription || error)}`
     );
   }
 
@@ -57,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     if (exchangeError) {
       console.error("[Auth Callback] FATAL: Exchange Error:", exchangeError.message);
-      return NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent(exchangeError.message)}`);
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`);
     }
 
     if (!exchangeError && session) {
@@ -113,10 +117,32 @@ export async function GET(request: NextRequest) {
           if (finalCheck) {
             console.log("[Auth Callback] Profile confirmed after late insert/conflict.");
           } else {
-             return NextResponse.redirect(`${origin}/auth/login?error=profile_creation_failed`);
+             return NextResponse.redirect(`${origin}/login?error=profile_creation_failed`);
           }
         } else {
           console.log("[Auth Callback] Profile created successfully via manual insert.");
+          
+          const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+          
+          // Send Telegram alert for NEW users
+          await sendTelegramAlert({
+            type: "new_user_signup",
+            user_email: user.email!,
+            band: `New user: ${fullName || user.email}`,
+            report_url: `${origin}/admin/users`
+          });
+
+          // Send Welcome Email
+          try {
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
+              to: user.email!,
+              subject: "Welcome to FundabilityOS",
+              react: React.createElement(WelcomeEmail, { userName: fullName || user.email! }),
+            });
+          } catch (emailErr) {
+            console.error('[Auth Callback] Error sending welcome email:', emailErr);
+          }
         }
       }
       
@@ -125,16 +151,15 @@ export async function GET(request: NextRequest) {
       return response;
     }
 
-    console.error("[Auth Callback] ERROR: Valid session not established after exchange.");
-    return NextResponse.redirect(`${origin}/auth/login?error=session_not_found`);
+    return NextResponse.redirect(`${origin}/login?error=session_not_found`);
   }
 
   // No code — check if there is an error in the URL from Supabase
   if (error) {
     console.error("[Auth Callback] URL Error from Supabase:", error, errorDescription);
-    return NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent(errorDescription || error)}`);
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorDescription || error)}`);
   }
 
   console.warn("[Auth Callback] No code or error found. Bouncing to login.");
-  return NextResponse.redirect(`${origin}/auth/login`);
+  return NextResponse.redirect(`${origin}/login`);
 }

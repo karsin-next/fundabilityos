@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/lib/hooks/useUser";
 
 export default function RootLayout({
   children,
@@ -52,15 +52,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body>
+    <html lang="en">
+      <body>
+        <AuthProvider>
           <Navbar />
           <main>{children}</main>
           <FooterWrapper />
           <ChatWidget />
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

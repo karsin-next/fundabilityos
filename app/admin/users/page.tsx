@@ -240,7 +240,6 @@ export default function AdminUsersPage() {
               { label: "RESEND_API_KEY", ok: true },
               { label: "SUPABASE_SERVICE_ROLE_KEY", ok: true },
               { label: "ANTHROPIC_API_KEY", ok: true },
-              { label: "CLERK_WEBHOOK_SECRET", ok: true },
             ].map(env => (
               <div key={env.label} className="flex items-center gap-2">
                 {env.ok ? <CheckCircle size={12} className="text-emerald-400 shrink-0" /> : <XCircle size={12} className="text-red-400 shrink-0" />}

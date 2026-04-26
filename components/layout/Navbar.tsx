@@ -4,14 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { Menu, X, LayoutDashboard, Home, Rocket, Info, Briefcase } from "lucide-react";
+import { useUser } from "@/lib/hooks/useUser";
+import { Menu, X, LayoutDashboard, Home, Rocket, Info, Briefcase, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded, signOut } = useUser();
 
   // Hide Navbar only on deep interview/checkout flows and admin pages
   const hideNavRoutes = ["/interview", "/upload", "/checkout", "/admin"];
@@ -77,10 +77,23 @@ export default function Navbar() {
                 >
                   <LayoutDashboard size={16} /> Dashboard
                 </Link>
-                <div className="bg-white/10 p-1.5 rounded-full border border-white/10">
-                  <UserButton afterSignOutUrl="/" />
-                </div>
+                <button
+                  onClick={() => { signOut(); router.push("/"); }}
+                  className="text-white/60 hover:text-[#ffd800] p-2 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut size={20} />
+                </button>
               </>
+            )}
+            {isLoaded && !user && (
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="btn btn-primary w-full md:w-auto"
+              >
+                Sign In
+              </Link>
             )}
           </div>
         </nav>

@@ -13,7 +13,7 @@ import {
   UserPlus, FileSearch, Briefcase, Copyleft, MessageSquare, ShieldAlert, BookOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 interface NavItem {
   name: string;
@@ -231,8 +231,7 @@ const siteMap: NavSection[] = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user, signOut } = useUser();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const isActive = (href: string) => pathname === href;
@@ -262,17 +261,17 @@ export function DashboardSidebar() {
         <div className="px-4 mb-5">
            <div className="bg-white/5 border border-[#1b4f68] p-4 rounded-sm shadow-inner">
               <div className="w-8 h-8 bg-[#ffd800] text-[#022f42] rounded-sm font-black flex items-center justify-center text-lg mb-3 shadow-sm">
-                {(user?.firstName || "S").charAt(0).toUpperCase()}
+                {(user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || "S").toUpperCase()}
               </div>
               <h2 className="text-sm font-bold text-white leading-tight truncate">
-                {user?.fullName || "FundabilityOS User"}
+                {user?.user_metadata?.full_name || "FundabilityOS User"}
               </h2>
               <p className="text-[10px] text-[#b0d0e0] font-medium mt-0.5 truncate">
                 Founder
               </p>
-              {user?.primaryEmailAddress?.emailAddress && (
+              {user?.email && (
                 <p className="text-[9px] text-white/70 truncate leading-tight mt-2 bg-black/20 px-1.5 py-0.5 rounded-sm">
-                  {user.primaryEmailAddress.emailAddress}
+                  {user.email}
                 </p>
               )}
            </div>
@@ -384,7 +383,7 @@ export function DashboardSidebar() {
         <button 
           onClick={async () => {
             await signOut();
-            window.location.href = '/auth/login';
+            window.location.href = '/login';
           }} 
           className="w-full bg-[#1b4f68]/20 hover:bg-red-500/10 hover:text-red-400 text-white/50 transition-colors border border-white/5 rounded-sm py-2.5 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest"
         >

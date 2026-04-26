@@ -12,7 +12,7 @@ import Link from "next/link";
 import { 
   AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 
 export default function BreakevenPage() {

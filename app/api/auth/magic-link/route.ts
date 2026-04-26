@@ -13,12 +13,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Generate the magic link using Supabase Admin
-    // This creates a link that contains a 'code' or 'token'
+    // We force the redirectTo to our callback endpoint so we can handle cookie exchange
+    const origin = process.env.NEXT_PUBLIC_APP_URL || "";
+    const callbackUrl = `${origin}/api/auth/callback`;
+    const finalDestination = redirectTo || "/dashboard";
+    
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: {
-        redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/auth/callback`,
+        redirectTo: `${callbackUrl}?redirect=${encodeURIComponent(finalDestination)}`,
       },
     });
 
@@ -29,6 +33,7 @@ export async function POST(req: NextRequest) {
 
     const { properties } = data;
     const magicLink = properties.action_link;
+    console.log("[Magic Link Generated]:", magicLink);
 
     // 2. Send the email via Resend
     const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
@@ -54,8 +59,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (resendError) {
-      console.error("[Resend Error]:", resendError);
-      return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+      console.error("[Resend Error Detailed]:", JSON.stringify(resendError, null, 2));
+      return NextResponse.json({ error: `Failed to send email: ${resendError.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

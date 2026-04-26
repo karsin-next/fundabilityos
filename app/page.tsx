@@ -9,7 +9,7 @@ import QuickAssess from "@/components/assessment/QuickAssess";
 import ScoreDashboard from "@/components/assessment/ScoreDashboard";
 import PitchDeckUploader from "@/components/upload/PitchDeckUploader";
 import LeadCaptureGate from "@/components/auth/LeadCaptureGate";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import type { ScoringResult } from "@/lib/scoring";
 
