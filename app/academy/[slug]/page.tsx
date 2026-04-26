@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Users, Zap, ExternalLink } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 /**
  * Article Data Store

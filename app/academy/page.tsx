@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BookOpen, TrendingUp, Users, Zap, ArrowRight, ShieldCheck, Clock } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/hooks/useUser";
 
 const ACADEMY_ARTICLES = [
   {
