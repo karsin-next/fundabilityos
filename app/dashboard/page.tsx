@@ -143,7 +143,9 @@ export default function AuditHubPage() {
                 </div>
              </div>
 
-                <div className="text-lg font-black text-white uppercase tracking-tight">{band}</div>
+             <div className="bg-white/5 border border-white/10 px-8 py-4 backdrop-blur-md flex flex-col items-center gap-2">
+               <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Market Readiness Level</div>
+               <div className="text-lg font-black text-white uppercase tracking-tight">{band}</div>
              </div>
 
              {!latestReport && !loading && (
