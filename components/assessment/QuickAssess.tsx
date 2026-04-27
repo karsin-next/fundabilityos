@@ -103,11 +103,12 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
       const data = JSON.parse(jsonString.replace(/```json/g, "").replace(/```/g, "").trim());
 
       if (data.type === "complete") {
-        if (!user) {
+        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("guest_email") : null;
+        if (!user && !storedEmail) {
           setExtractedData(data.extracted_data);
           setState("collecting_email");
         } else {
-          runScoring(data.extracted_data);
+          runScoring(data.extracted_data, storedEmail || undefined);
         }
       } else if (data.type === "question") {
         setActiveQuestion({
@@ -146,6 +147,17 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
   const runScoring = async (structuredData: Record<string, unknown>, emailOverride?: string) => {
     setState("scoring");
     try {
+      // Auto-trigger magic link if we have an email but no user
+      if (!user && emailOverride) {
+        const supabase = createClient();
+        supabase.auth.signInWithOtp({ 
+          email: emailOverride,
+          options: {
+            emailRedirectTo: window.location.origin + "/dashboard"
+          }
+        }).catch(err => console.error("Magic link trigger error:", err));
+      }
+
       const res = await fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -247,21 +259,38 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
 
   if (state === "done" && scoringResult) {
     return (
-      <div style={{ padding: "2rem", backgroundColor: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid var(--yellow-20)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-          <div>
-            <h3 style={{ color: "var(--white)", fontWeight: 700 }}>Analysis Complete</h3>
-            <p style={{ fontSize: "0.85rem", color: "var(--yellow)" }}>Band: {scoringResult.band}</p>
-          </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--yellow)" }}>{scoringResult.score}</div>
+      <div style={{ padding: "2.5rem", backgroundColor: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid var(--yellow-20)", textAlign: "center" }}>
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ fontSize: "10px", fontWeight: 900, color: "var(--yellow)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "0.5rem" }}>Assessment Complete</div>
+          <div style={{ fontSize: "4rem", fontWeight: 900, color: "var(--white)", lineHeight: 1 }}>{scoringResult.score}</div>
+          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--yellow)", marginTop: "0.5rem", textTransform: "uppercase" }}>Band: {scoringResult.band}</div>
         </div>
-        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+        
+        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "2rem", textAlign: "left" }}>
           {scoringResult.summary_paragraph}
         </p>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <Link href={`/report/${scoringResult.score}`} className="btn btn-primary btn-sm">View Full Report <ArrowRight size={14} /></Link>
-          <button onClick={handleReset} className="btn btn-ghost btn-sm">Retake</button>
+
+        <div className="bg-[#ffd800]/5 border border-[#ffd800]/10 p-5 rounded-sm mb-8 text-left">
+           <h4 className="text-[11px] font-black uppercase tracking-widest text-[#ffd800] mb-2 flex items-center gap-2">
+             <Zap size={14} /> Next Step: Secure Your Narrative
+           </h4>
+           <p className="text-[12px] text-white/60 font-medium leading-relaxed">
+             We&apos;ve unlocked your basic score. Your full 10-module dashboard and Investor-Ready Report are now waiting for you. 
+           </p>
         </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <Link href="/dashboard" className="btn btn-primary w-full py-4 text-[11px] font-black uppercase tracking-widest">
+            Enter My Dashboard & Fix Gaps <ArrowRight size={16} />
+          </Link>
+          <button onClick={handleReset} className="text-[10px] font-bold text-white/30 uppercase tracking-widest hover:text-white transition-colors">Retake Diagnostic</button>
+        </div>
+
+        {!user && (
+          <p className="text-[10px] text-white/30 mt-6 font-medium leading-relaxed">
+            Check your inbox for a magic link to access your persistent dashboard.
+          </p>
+        )}
       </div>
     );
   }
@@ -288,14 +317,16 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
           <button 
             disabled={!guestEmail.includes("@")}
             onClick={() => {
-              // Trigger magic link in background
-              const supabase = createClient();
-              supabase.auth.signInWithOtp({ 
-                email: guestEmail,
-                options: {
-                  emailRedirectTo: window.location.origin + "/dashboard"
-                }
-              });
+              const storedEmail = guestEmail || (typeof window !== "undefined" ? localStorage.getItem("guest_email") : null);
+              if (storedEmail) {
+                const supabase = createClient();
+                supabase.auth.signInWithOtp({ 
+                  email: storedEmail,
+                  options: {
+                    emailRedirectTo: window.location.origin + "/dashboard"
+                  }
+                }).catch(err => console.error("Magic link error:", err));
+              }
               runScoring(extractedData!, guestEmail);
             }}
             className="btn btn-primary w-full"

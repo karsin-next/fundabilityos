@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
             await supabaseAdmin.from("sessions").upsert({
               id: assessmentId,
               user_id: finalUserId || null,
+              user_email: userEmail || null,
               status: "completed",
               completed_at: new Date().toISOString()
             });

@@ -135,16 +135,22 @@ export default function AuditHubPage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
                   <span className="text-7xl font-black text-white leading-none tracking-tighter">
-                    {loading ? "--" : score}
+                    {loading ? "--" : (latestReport ? score : "--")}
                   </span>
-                  <span className="text-[10px] font-black text-[#ffd800] uppercase tracking-[0.3em] mt-2">OUT OF 100</span>
+                  <span className="text-[10px] font-black text-[#ffd800] uppercase tracking-[0.3em] mt-2">
+                    {latestReport ? "OUT OF 100" : "NO DATA"}
+                  </span>
                 </div>
              </div>
 
-             <div className="bg-white/5 border border-white/10 px-8 py-4 backdrop-blur-md flex flex-col items-center gap-2">
-               <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Market Readiness Level</div>
-               <div className="text-lg font-black text-white uppercase tracking-tight">{band}</div>
+                <div className="text-lg font-black text-white uppercase tracking-tight">{band}</div>
              </div>
+
+             {!latestReport && !loading && (
+               <Link href="/interview" className="mt-8 btn bg-[#ffd800] text-[#022f42] px-8 py-3 text-xs font-black uppercase tracking-widest shadow-xl hover:bg-white transition-all">
+                 Start Your First Diagnostic
+               </Link>
+             )}
           </div>
         </div>
 
