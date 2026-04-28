@@ -3,7 +3,7 @@
 import { 
   Target, Users, ShieldCheck, 
   TrendingUp, Globe, BarChart3, ChevronRight, CheckCircle2, PlayCircle, ClipboardList, ArrowRight,
-  AlertTriangle, RefreshCw, Zap, AlertCircle
+  AlertTriangle, RefreshCw, Zap, AlertCircle, DollarSign, PieChart
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/lib/hooks/useUser";
