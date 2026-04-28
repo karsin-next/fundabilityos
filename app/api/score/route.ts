@@ -36,7 +36,7 @@ async function logInteraction(data: any) {
   }
 }
 
-function fireDebateEngine(assessmentId: string, context: string, primaryScore: number) {
+function fireDebateEngine(assessmentId: string, context: string, primaryScore: number, userEmail?: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
@@ -48,6 +48,7 @@ function fireDebateEngine(assessmentId: string, context: string, primaryScore: n
       assessment_id: assessmentId,
       startup_context: context,
       primary_score: primaryScore,
+      user_email: userEmail,
     }),
   }).catch((e) => console.error("[Debate Fire-and-Forget Error]:", e));
 }
@@ -215,7 +216,7 @@ export async function POST(req: NextRequest) {
                   final_output: result,
                   tokens_used: 0
                 });
-                fireDebateEngine(assessmentId, answersJson, score);
+                fireDebateEngine(assessmentId, answersJson, score, userEmail);
               } catch (e) {
                 console.error("[BG Analytics Error]:", e);
               }

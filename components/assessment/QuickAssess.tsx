@@ -315,7 +315,7 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
             style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid var(--yellow-20)", borderRadius: "4px", padding: "0.875rem", color: "white", fontSize: "0.9rem", marginBottom: "1.5rem" }}
           />
           <button 
-            disabled={!guestEmail.includes("@")}
+            disabled={!guestEmail.includes("@") || state === "scoring"}
             onClick={() => {
               const storedEmail = guestEmail || (typeof window !== "undefined" ? localStorage.getItem("guest_email") : null);
               if (storedEmail) {
@@ -329,9 +329,9 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
               }
               runScoring(extractedData!, guestEmail);
             }}
-            className="btn btn-primary w-full"
+            className="btn btn-primary w-full disabled:opacity-50"
           >
-            Generate My Report & Save Results <ArrowRight size={14} />
+            {state === "scoring" ? "Analyzing..." : "Generate My Report & Save Results"} <ArrowRight size={14} />
           </button>
           <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", marginTop: "1rem", textAlign: "center" }}>
             No password needed. Check your inbox for a secure login link.
