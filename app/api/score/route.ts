@@ -115,14 +115,12 @@ export async function POST(req: NextRequest) {
             // 1. Resolve User ID (Smart Link) & Auto-Create Profile
             let finalUserId = userId;
             if (!finalUserId && userEmail) {
-              // Try to find existing profile by email
               const { data: profile } = await supabaseAdmin.from("profiles").select("id").eq("email", userEmail).single();
               if (profile) {
                 finalUserId = profile.id;
               } else {
-                // Try to find auth user by email and create profile
-                const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
-                const authUser = authUsers?.users?.find((u: any) => u.email === userEmail);
+                const { data: authUsersRes } = await supabaseAdmin.auth.admin.listUsers();
+                const authUser = authUsersRes?.users?.find((u: any) => u.email === userEmail);
                 if (authUser) {
                   await supabaseAdmin.from("profiles").upsert({
                     id: authUser.id,
@@ -131,21 +129,21 @@ export async function POST(req: NextRequest) {
                     role: "startup",
                   });
                   finalUserId = authUser.id;
-                  console.log(`[Score] Auto-created profile for ${userEmail}`);
                 }
               }
             }
 
             // 2. Save Session & Report (SEQUENTIAL)
-            await supabaseAdmin.from("sessions").upsert({
+            const { error: sessionError } = await supabaseAdmin.from("sessions").upsert({
               id: assessmentId,
               user_id: finalUserId || null,
-              user_email: userEmail || null,
               status: "completed",
               completed_at: new Date().toISOString()
             });
 
-            await supabaseAdmin.from("reports").insert({
+            if (sessionError) throw new Error(`Failed to create session: ${sessionError.message}`);
+
+            const { error: reportError } = await supabaseAdmin.from("reports").insert({
               id: reportId,
               session_id: assessmentId,
               user_id: finalUserId || null,
@@ -158,11 +156,11 @@ export async function POST(req: NextRequest) {
               investor_concerns: result.investor_concerns,
               action_items: result.action_items,
               summary_paragraph: result.summary_paragraph,
-              full_json: result
             });
 
-            // 3. BACKGROUND TASKS (Each isolated so one failure doesn't kill the rest)
-            // -- Telegram --
+            if (reportError) throw new Error(`Failed to save report: ${reportError.message}`);
+
+            // 3. BACKGROUND TASKS
             (async () => {
               try {
                 const adminUrl = `${baseUrl}/admin/users?email=${encodeURIComponent(userEmail || "anonymous@user.com")}`;
@@ -173,61 +171,36 @@ export async function POST(req: NextRequest) {
                   band: result.band,
                   report_url: adminUrl
                 });
-              } catch (e) {
-                console.error("[BG Telegram Error]:", e);
-              }
+              } catch (e) { console.error("[BG Telegram Error]:", e); }
             })();
 
-            // -- Email --
             (async () => {
               try {
                 if (userEmail) {
-                  console.log(`[Score API] Attempting to send assessment email to ${userEmail}...`);
-                  const { data: emailData, error: emailError } = await resend.emails.send({
+                  await resend.emails.send({
                     from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
                     to: [userEmail],
                     subject: `Your Fundability Score is ${score}/100`,
-                    react: React.createElement(DiagnosticCompleteEmail, { 
-                      score, 
-                      band: result.band, 
-                      reportUrl 
-                    }),
+                    react: React.createElement(DiagnosticCompleteEmail, { score, band: result.band, reportUrl }),
                   });
-                  
-                  if (emailError) {
-                    console.error("[Resend Error]:", emailError);
-                  } else {
-                    console.log("[Resend] Email sent successfully. ID:", emailData?.id);
-                  }
-                } else {
-                  console.warn("[Resend] No userEmail provided, skipping email.");
                 }
-              } catch (e) {
-                console.error("[BG Email Error]:", e);
-              }
+              } catch (e) { console.error("[BG Email Error]:", e); }
             })();
 
-            // -- Analytics & Debate --
             (async () => {
               try {
                 await trackEvent("assessment_completed", { sessionId: assessmentId, score, userId: finalUserId });
-                await logInteraction({
-                  assessment_id: assessmentId,
-                  final_output: result,
-                  tokens_used: 0
-                });
+                await logInteraction({ assessment_id: assessmentId, final_output: result, tokens_used: 0 });
                 fireDebateEngine(assessmentId, answersJson, score, userEmail);
-              } catch (e) {
-                console.error("[BG Analytics Error]:", e);
-              }
+              } catch (e) { console.error("[BG Analytics Error]:", e); }
             })();
           }
-
+        } catch (err: unknown) {
+          console.error("[Scoring Error]:", err);
+          const errorMessage = err instanceof Error ? err.message : "Unknown error";
+          controller.enqueue(encoder.encode(`data: {"error": "${errorMessage}"}\n\n`));
+        } finally {
           controller.enqueue(encoder.encode('data: {"done": true}\n\n'));
-          controller.close();
-        } catch (err: any) {
-          console.error("[Stream Error]:", err);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
           controller.close();
         }
       },
