@@ -181,14 +181,23 @@ export async function POST(req: NextRequest) {
             (async () => {
               try {
                 if (userEmail) {
-                  const { error: emailError } = await resend.emails.send({
+                  console.log(`[Score API] Attempting to send assessment email to ${userEmail}...`);
+                  const { data: emailData, error: emailError } = await resend.emails.send({
                     from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
-                    to: userEmail,
+                    to: [userEmail],
                     subject: `Your Fundability Score is ${score}/100`,
-                    react: DiagnosticCompleteEmail({ score, band: result.band, reportUrl }) as React.ReactElement,
+                    react: React.createElement(DiagnosticCompleteEmail, { 
+                      score, 
+                      band: result.band, 
+                      reportUrl 
+                    }),
                   });
-                  if (emailError) console.error("[Resend Error]:", emailError);
-                  else console.log("[Resend] Email sent to:", userEmail);
+                  
+                  if (emailError) {
+                    console.error("[Resend Error]:", emailError);
+                  } else {
+                    console.log("[Resend] Email sent successfully. ID:", emailData?.id);
+                  }
                 } else {
                   console.warn("[Resend] No userEmail provided, skipping email.");
                 }

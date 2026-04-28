@@ -24,7 +24,30 @@ export async function GET(request: NextRequest) {
 
   // Handle session sync from client (Implicit Flow fallback)
   if (searchParams.get("sync") === "true") {
-    return NextResponse.json({ synced: true });
+    console.log("[Auth Callback] [SYNC] Synchronizing cookies for client-side session...");
+    let response = NextResponse.json({ synced: true });
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
+    
+    // Trigger cookie sync by fetching user
+    await supabase.auth.getUser();
+    
+    return response;
   }
 
   // Handle OAuth error passed in the URL

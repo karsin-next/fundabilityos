@@ -121,7 +121,13 @@ export default function ScoreDashboard({ scoringResult, handleReset }: Props) {
               <div className="text-white text-xs font-black uppercase tracking-widest mb-2">Priority 1 Action</div>
               <p className="text-white/40 text-[11px] font-medium">{scoringResult.action_items[0]?.action || "Review full insights inside dashboard."}</p>
            </div>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+              <Link 
+                href="/dashboard"
+                className="btn bg-[#ffd800] text-[#022f42] hover:bg-white px-10 py-4 font-black uppercase tracking-widest text-xs shadow-2xl transition-all flex items-center justify-center gap-3 group"
+              >
+                Enter My Dashboard <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
               <Link 
                 href="/coming-soon" 
                 onClick={() => {
@@ -135,9 +141,9 @@ export default function ScoreDashboard({ scoringResult, handleReset }: Props) {
                     })
                   }).catch(() => {});
                 }}
-                className="btn btn-ghost border-white/20 text-white hover:bg-white hover:text-[#022f42] px-6 py-4 font-black uppercase tracking-widest text-[10px] shadow-xl transition-all flex items-center gap-2 group"
+                className="btn btn-ghost border-white/20 text-white hover:bg-white hover:text-[#022f42] px-6 py-4 font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 group"
               >
-                UNLOCK FULL 8-DIMENSION SCORES ($29) <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                Unlock Investor-Ready Report ($9) <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
            </div>
         </div>
