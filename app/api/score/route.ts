@@ -36,7 +36,7 @@ async function logInteraction(data: any) {
   }
 }
 
-function fireDebateEngine(assessmentId: string, context: string, primaryScore: number, userEmail?: string) {
+function fireDebateEngine(assessmentId: string, context: string, primaryScore: number) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
@@ -48,7 +48,6 @@ function fireDebateEngine(assessmentId: string, context: string, primaryScore: n
       assessment_id: assessmentId,
       startup_context: context,
       primary_score: primaryScore,
-      user_email: userEmail,
     }),
   }).catch((e) => console.error("[Debate Fire-and-Forget Error]:", e));
 }
@@ -115,12 +114,14 @@ export async function POST(req: NextRequest) {
             // 1. Resolve User ID (Smart Link) & Auto-Create Profile
             let finalUserId = userId;
             if (!finalUserId && userEmail) {
+              // Try to find existing profile by email
               const { data: profile } = await supabaseAdmin.from("profiles").select("id").eq("email", userEmail).single();
               if (profile) {
                 finalUserId = profile.id;
               } else {
-                const { data: authUsersRes } = await supabaseAdmin.auth.admin.listUsers();
-                const authUser = authUsersRes?.users?.find((u: any) => u.email === userEmail);
+                // Try to find auth user by email and create profile
+                const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+                const authUser = authUsers?.users?.find((u: any) => u.email === userEmail);
                 if (authUser) {
                   await supabaseAdmin.from("profiles").upsert({
                     id: authUser.id,
@@ -129,21 +130,20 @@ export async function POST(req: NextRequest) {
                     role: "startup",
                   });
                   finalUserId = authUser.id;
+                  console.log(`[Score] Auto-created profile for ${userEmail}`);
                 }
               }
             }
 
             // 2. Save Session & Report (SEQUENTIAL)
-            const { error: sessionError } = await supabaseAdmin.from("sessions").upsert({
+            await supabaseAdmin.from("sessions").upsert({
               id: assessmentId,
               user_id: finalUserId || null,
               status: "completed",
               completed_at: new Date().toISOString()
             });
 
-            if (sessionError) throw new Error(`Failed to create session: ${sessionError.message}`);
-
-            const { error: reportError } = await supabaseAdmin.from("reports").insert({
+            await supabaseAdmin.from("reports").insert({
               id: reportId,
               session_id: assessmentId,
               user_id: finalUserId || null,
@@ -156,11 +156,11 @@ export async function POST(req: NextRequest) {
               investor_concerns: result.investor_concerns,
               action_items: result.action_items,
               summary_paragraph: result.summary_paragraph,
+              full_json: result
             });
 
-            if (reportError) throw new Error(`Failed to save report: ${reportError.message}`);
-
-            // 3. BACKGROUND TASKS
+            // 3. BACKGROUND TASKS (Each isolated so one failure doesn't kill the rest)
+            // -- Telegram --
             (async () => {
               try {
                 const adminUrl = `${baseUrl}/admin/users?email=${encodeURIComponent(userEmail || "anonymous@user.com")}`;
@@ -171,36 +171,52 @@ export async function POST(req: NextRequest) {
                   band: result.band,
                   report_url: adminUrl
                 });
-              } catch (e) { console.error("[BG Telegram Error]:", e); }
+              } catch (e) {
+                console.error("[BG Telegram Error]:", e);
+              }
             })();
 
+            // -- Email --
             (async () => {
               try {
                 if (userEmail) {
-                  await resend.emails.send({
+                  const { error: emailError } = await resend.emails.send({
                     from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
-                    to: [userEmail],
+                    to: userEmail,
                     subject: `Your Fundability Score is ${score}/100`,
-                    react: React.createElement(DiagnosticCompleteEmail, { score, band: result.band, reportUrl }),
+                    react: DiagnosticCompleteEmail({ score, band: result.band, reportUrl }) as React.ReactElement,
                   });
+                  if (emailError) console.error("[Resend Error]:", emailError);
+                  else console.log("[Resend] Email sent to:", userEmail);
+                } else {
+                  console.warn("[Resend] No userEmail provided, skipping email.");
                 }
-              } catch (e) { console.error("[BG Email Error]:", e); }
+              } catch (e) {
+                console.error("[BG Email Error]:", e);
+              }
             })();
 
+            // -- Analytics & Debate --
             (async () => {
               try {
                 await trackEvent("assessment_completed", { sessionId: assessmentId, score, userId: finalUserId });
-                await logInteraction({ assessment_id: assessmentId, final_output: result, tokens_used: 0 });
-                fireDebateEngine(assessmentId, answersJson, score, userEmail);
-              } catch (e) { console.error("[BG Analytics Error]:", e); }
+                await logInteraction({
+                  assessment_id: assessmentId,
+                  final_output: result,
+                  tokens_used: 0
+                });
+                fireDebateEngine(assessmentId, answersJson, score);
+              } catch (e) {
+                console.error("[BG Analytics Error]:", e);
+              }
             })();
           }
-        } catch (err: unknown) {
-          console.error("[Scoring Error]:", err);
-          const errorMessage = err instanceof Error ? err.message : "Unknown error";
-          controller.enqueue(encoder.encode(`data: {"error": "${errorMessage}"}\n\n`));
-        } finally {
+
           controller.enqueue(encoder.encode('data: {"done": true}\n\n'));
+          controller.close();
+        } catch (err: any) {
+          console.error("[Stream Error]:", err);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
           controller.close();
         }
       },

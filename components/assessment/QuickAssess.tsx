@@ -7,7 +7,6 @@ import ProgressTracker from "@/components/chat/ProgressTracker";
 import ScoreGaugeMock from "@/components/score/ScoreGaugeMock";
 import type { ScoringResult } from "@/lib/scoring";
 import { useUser } from "@/lib/hooks/useUser";
-import { createClient } from "@/lib/supabase/client";
 
 type InterviewState = "idle" | "loading_question" | "answering" | "collecting_email" | "scoring" | "done" | "error";
 
@@ -103,12 +102,11 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
       const data = JSON.parse(jsonString.replace(/```json/g, "").replace(/```/g, "").trim());
 
       if (data.type === "complete") {
-        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("guest_email") : null;
-        if (!user && !storedEmail) {
+        if (!user) {
           setExtractedData(data.extracted_data);
           setState("collecting_email");
         } else {
-          runScoring(data.extracted_data, storedEmail || undefined);
+          runScoring(data.extracted_data);
         }
       } else if (data.type === "question") {
         setActiveQuestion({
@@ -147,17 +145,6 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
   const runScoring = async (structuredData: Record<string, unknown>, emailOverride?: string) => {
     setState("scoring");
     try {
-      // Auto-trigger magic link if we have an email but no user
-      if (!user && emailOverride) {
-        const supabase = createClient();
-        supabase.auth.signInWithOtp({ 
-          email: emailOverride,
-          options: {
-            emailRedirectTo: window.location.origin + "/dashboard"
-          }
-        }).catch(err => console.error("Magic link trigger error:", err));
-      }
-
       const res = await fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,38 +246,21 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
 
   if (state === "done" && scoringResult) {
     return (
-      <div style={{ padding: "2.5rem", backgroundColor: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid var(--yellow-20)", textAlign: "center" }}>
-        <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "10px", fontWeight: 900, color: "var(--yellow)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "0.5rem" }}>Assessment Complete</div>
-          <div style={{ fontSize: "4rem", fontWeight: 900, color: "var(--white)", lineHeight: 1 }}>{scoringResult.score}</div>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--yellow)", marginTop: "0.5rem", textTransform: "uppercase" }}>Band: {scoringResult.band}</div>
+      <div style={{ padding: "2rem", backgroundColor: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid var(--yellow-20)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <div>
+            <h3 style={{ color: "var(--white)", fontWeight: 700 }}>Analysis Complete</h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--yellow)" }}>Band: {scoringResult.band}</p>
+          </div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--yellow)" }}>{scoringResult.score}</div>
         </div>
-        
-        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "2rem", textAlign: "left" }}>
+        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: "1.5rem" }}>
           {scoringResult.summary_paragraph}
         </p>
-
-        <div className="bg-[#ffd800]/5 border border-[#ffd800]/10 p-5 rounded-sm mb-8 text-left">
-           <h4 className="text-[11px] font-black uppercase tracking-widest text-[#ffd800] mb-2 flex items-center gap-2">
-             <Zap size={14} /> Next Step: Secure Your Narrative
-           </h4>
-           <p className="text-[12px] text-white/60 font-medium leading-relaxed">
-             We&apos;ve unlocked your basic score. Your full 10-module dashboard and Investor-Ready Report are now waiting for you. 
-           </p>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <Link href={`/report/${scoringResult.score}`} className="btn btn-primary btn-sm">View Full Report <ArrowRight size={14} /></Link>
+          <button onClick={handleReset} className="btn btn-ghost btn-sm">Retake</button>
         </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Link href="/dashboard" className="btn btn-primary w-full py-4 text-[11px] font-black uppercase tracking-widest">
-            Enter My Dashboard & Fix Gaps <ArrowRight size={16} />
-          </Link>
-          <button onClick={handleReset} className="text-[10px] font-bold text-white/30 uppercase tracking-widest hover:text-white transition-colors">Retake Diagnostic</button>
-        </div>
-
-        {!user && (
-          <p className="text-[10px] text-white/30 mt-6 font-medium leading-relaxed">
-            Check your inbox for a magic link to access your persistent dashboard.
-          </p>
-        )}
       </div>
     );
   }
@@ -304,9 +274,7 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
       {state === "collecting_email" ? (
         <div style={{ animation: "questionFadeIn 0.4s easeOut" }}>
           <h3 style={{ color: "var(--white)", fontSize: "1.25rem", marginBottom: "0.5rem", fontWeight: 700 }}>Where should we send your report?</h3>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-            Enter your email to receive your full fundability analysis. <strong>This will also create your account</strong> so you can access your private dashboard via magic link.
-          </p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>Enter your email to receive your full fundability analysis and alpha report.</p>
           <input 
             type="email"
             value={guestEmail}
@@ -315,27 +283,12 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
             style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid var(--yellow-20)", borderRadius: "4px", padding: "0.875rem", color: "white", fontSize: "0.9rem", marginBottom: "1.5rem" }}
           />
           <button 
-            disabled={!guestEmail.includes("@") || state === "scoring"}
-            onClick={() => {
-              const storedEmail = guestEmail || (typeof window !== "undefined" ? localStorage.getItem("guest_email") : null);
-              if (storedEmail) {
-                const supabase = createClient();
-                supabase.auth.signInWithOtp({ 
-                  email: storedEmail,
-                  options: {
-                    emailRedirectTo: window.location.origin + "/dashboard"
-                  }
-                }).catch(err => console.error("Magic link error:", err));
-              }
-              runScoring(extractedData!, guestEmail);
-            }}
-            className="btn btn-primary w-full disabled:opacity-50"
+            disabled={!guestEmail.includes("@")}
+            onClick={() => runScoring(extractedData!, guestEmail)}
+            className="btn btn-primary w-full"
           >
-            {state === "scoring" ? "Analyzing..." : "Generate My Report & Save Results"} <ArrowRight size={14} />
+            Generate My Report <ArrowRight size={14} />
           </button>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", marginTop: "1rem", textAlign: "center" }}>
-            No password needed. Check your inbox for a secure login link.
-          </p>
         </div>
       ) : !activeQuestion ? (
         <div style={{ textAlign: "center", padding: "3rem 0" }}>

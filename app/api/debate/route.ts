@@ -12,7 +12,6 @@ interface DebateRequest {
   assessment_id: string;
   startup_context: string; // The serialized answers/context used for scoring
   primary_score: number;    // The original QuickAssess score we're debating
-  user_email?: string;
 }
 
 interface ArbiterOutput {
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
     }
 
-    const { assessment_id, startup_context, primary_score, user_email }: DebateRequest = await req.json();
+    const { assessment_id, startup_context, primary_score }: DebateRequest = await req.json();
 
     if (!assessment_id || !startup_context) {
       return NextResponse.json({ error: "assessment_id and startup_context are required." }, { status: 400 });
@@ -130,7 +129,6 @@ Be blunt, precise, and cite specific deficiencies from the founder's answers. Ma
     // ── Send Telegram Notification ────────────────────────────────────────────
     await sendTelegramAlert({
       type: "investor_feedback_ready",
-      user_email: user_email || "anonymous@user.com",
       score: arbiterOutput.score,
       band: `Delta from original: ${deltaFromPrimary > 0 ? "+" : ""}${deltaFromPrimary}`,
       report_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,

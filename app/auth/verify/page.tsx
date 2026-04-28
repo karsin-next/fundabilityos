@@ -10,18 +10,6 @@ function VerifyContent() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   
   const targetUrl = searchParams.get("url");
-  const [hasRedirected, setHasRedirected] = useState(false);
-
-  useEffect(() => {
-    if (targetUrl && !hasRedirected) {
-      setHasRedirected(true);
-      setIsRedirecting(true);
-      const timer = setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [targetUrl, hasRedirected]);
 
   const handleConfirm = () => {
     if (!targetUrl) return;
