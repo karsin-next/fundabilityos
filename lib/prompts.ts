@@ -351,3 +351,13 @@ OUTPUT FORMAT:
   ],
   "placeholder": "<Placeholder guiding what to write in the open text box>"
 }`;
+
+// ============================================================
+// INVESTOR REPORT CONSOLIDATION PROMPT
+// ============================================================
+
+export const INVESTOR_REPORT_SYSTEM_PROMPT = `You are a lead investment analyst at FundabilityOS.
+Your goal is to consolidate multiple module-specific audit responses and a primary QuickAssess score into a single, high-fidelity "Investor-Ready Narrative Report".
+
+The output must be a clean, professional JSON object that summarizes the startup's strengths, critical gaps, and 30-day roadmap based on the combined context.
+Return ONLY valid JSON. No preamble.`;
