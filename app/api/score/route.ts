@@ -169,17 +169,19 @@ export async function POST(req: NextRequest) {
             }
 
             // 1.5 MERGE GUEST QUICKASSESS ANSWERS INTO USER'S CHECKLIST GATES
-            if (finalUserId && result.financial_snapshot) {
+            if (finalUserId && answers) {
               try {
                 const standardModules = [
-                  { id: "1-problem", title: "Problem & Hypothesis", field: "problem_description" },
-                  { id: "2-customer", title: "Customer Persona", field: "target_customer" },
-                  { id: "3-competitor", title: "Competitor Analysis", field: "unfair_advantage" },
-                  { id: "4-product", title: "Product Readiness", field: "product_stage" },
-                  { id: "5-market", title: "Market Opportunity", field: "market_size_description" },
-                  { id: "6-pmf", title: "Product‑Market Fit & Traction", field: "customer_acquisition" },
-                  { id: "7-revenue", title: "Revenue Model Explorer", field: "monthly_revenue_usd" },
-                  { id: "8-team", title: "Team Composition Audit", field: "team_size" }
+                  { id: "1-problem", title: "Problem & Hypothesis" },
+                  { id: "2-customer", title: "Customer Persona" },
+                  { id: "3-competitor", title: "Competitor Analysis" },
+                  { id: "4-product", title: "Product Readiness" },
+                  { id: "5-market", title: "Market Opportunity" },
+                  { id: "6-pmf", title: "Product‑Market Fit & Traction" },
+                  { id: "7-revenue", title: "Revenue Model Explorer" },
+                  { id: "8-team", title: "Team Composition Audit" },
+                  { id: "9-financial-snapshot", title: "Financial Snapshot" },
+                  { id: "10-fundraising-ask", title: "Fundraising Ask" }
                 ];
 
                 for (const mod of standardModules) {
@@ -192,26 +194,29 @@ export async function POST(req: NextRequest) {
                     .single();
 
                   if (!existing) {
-                    // Pull option value and label
                     let label = "";
                     let val = 80;
 
-                    if (mod.id === "1-problem" && result.problem_description) {
-                      label = result.problem_description;
-                    } else if (mod.id === "2-customer" && result.target_customer) {
-                      label = result.target_customer;
+                    if (mod.id === "1-problem" && answers.problem_description) {
+                      label = answers.problem_description;
+                    } else if (mod.id === "2-customer" && answers.target_customer) {
+                      label = answers.target_customer;
                     } else if (mod.id === "3-competitor") {
-                      label = `Competitors: ${Array.isArray(result.main_competitors) ? result.main_competitors.join(", ") : (result.main_competitors || "None")}. Unfair Advantage: ${result.unfair_advantage || "None"}`;
-                    } else if (mod.id === "4-product" && result.product_stage) {
-                      label = `Product Stage: ${result.product_stage}`;
-                    } else if (mod.id === "5-market" && result.market_size_description) {
-                      label = result.market_size_description;
-                    } else if (mod.id === "6-pmf" && result.customer_acquisition) {
-                      label = `Acquisition: ${result.customer_acquisition}`;
+                      label = `Competitors: ${Array.isArray(answers.main_competitors) ? answers.main_competitors.join(", ") : (answers.main_competitors || "None")}. Moat: ${answers.unfair_advantage || "None"}`;
+                    } else if (mod.id === "4-product" && answers.product_stage) {
+                      label = `Product Stage: ${answers.product_stage}`;
+                    } else if (mod.id === "5-market" && answers.market_size_description) {
+                      label = answers.market_size_description;
+                    } else if (mod.id === "6-pmf" && answers.customer_acquisition) {
+                      label = `Acquisition: ${answers.customer_acquisition}`;
                     } else if (mod.id === "7-revenue") {
-                      label = result.is_pre_revenue ? "Pre-revenue startup" : `Revenue: $${result.financial_snapshot?.monthly_revenue_usd || 0}/month`;
-                    } else if (mod.id === "8-team" && result.team_overview) {
-                      label = `Team Size: ${result.team_overview?.size || 1}. Domain Fit: ${result.team_overview?.domain_fit || "Standard"}`;
+                      label = answers.is_pre_revenue ? "Pre-revenue" : `MRR: $${answers.monthly_revenue_usd || 0}`;
+                    } else if (mod.id === "8-team" && answers.team_size) {
+                      label = `Team Size: ${answers.team_size} members.`;
+                    } else if (mod.id === "9-financial-snapshot") {
+                      label = `Monthly Revenue: $${answers.monthly_revenue_usd || 0}, Monthly Burn: $${answers.burn_rate_usd || 0}, Runway: ${answers.runway_months || 0} months`;
+                    } else if (mod.id === "10-fundraising-ask") {
+                      label = `Target Raise: $${answers.target_raise_usd || 0}, Round: ${answers.target_round || "seed"}, Milestones: ${answers.milestones_with_raise || "None"}`;
                     }
 
                     if (label) {
@@ -354,7 +359,11 @@ export async function POST(req: NextRequest) {
             })();
           }
 
-          controller.enqueue(encoder.encode('data: {"done": true}\n\n'));
+          if (magicLinkCreated && magicLinkUrl) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, magicLinkUrl })}\n\n`));
+          } else {
+            controller.enqueue(encoder.encode('data: {"done": true}\n\n'));
+          }
           controller.close();
         } catch (err: any) {
           console.error("[Stream Error]:", err);

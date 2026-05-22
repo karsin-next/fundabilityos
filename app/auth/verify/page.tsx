@@ -11,6 +11,13 @@ function VerifyContent() {
   
   const targetUrl = searchParams.get("url");
 
+  useEffect(() => {
+    if (targetUrl) {
+      setIsRedirecting(true);
+      window.location.href = targetUrl;
+    }
+  }, [targetUrl]);
+
   const handleConfirm = () => {
     if (!targetUrl) return;
     setIsRedirecting(true);

@@ -175,6 +175,10 @@ export default function QuickAssess({ onComplete, isEmbedded = false }: Props) {
             if (!rawData) continue;
             try {
               const parsed = JSON.parse(rawData);
+              if (parsed.magicLinkUrl) {
+                window.location.href = parsed.magicLinkUrl;
+                return;
+              }
               if (parsed.delta) jsonString += parsed.delta;
               if (parsed.error) throw new Error("Scoring Error: " + parsed.error);
             } catch (e) { continue; }
