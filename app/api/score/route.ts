@@ -113,6 +113,9 @@ export async function POST(req: NextRequest) {
 
             // 1. Resolve User ID (Smart Link) & Auto-Create Profile
             let finalUserId = userId;
+            let magicLinkCreated = false;
+            let magicLinkUrl = "";
+
             if (!finalUserId && userEmail) {
               // Try to find existing profile by email
               const { data: profile } = await supabaseAdmin.from("profiles").select("id").eq("email", userEmail).single();
@@ -130,8 +133,109 @@ export async function POST(req: NextRequest) {
                     role: "startup",
                   });
                   finalUserId = authUser.id;
-                  console.log(`[Score] Auto-created profile for ${userEmail}`);
+                } else {
+                  // User does NOT exist in Supabase at all! Create user using generateLink!
+                  const origin = baseUrl;
+                  const callbackUrl = `${origin}/api/auth/callback`;
+                  const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+                    type: "magiclink",
+                    email: userEmail,
+                    options: {
+                      redirectTo: callbackUrl,
+                    },
+                  });
+
+                  if (!linkErr && linkData) {
+                    magicLinkCreated = true;
+                    const { properties, user: newUser } = linkData;
+                    const actionLink = properties.action_link;
+                    magicLinkUrl = `${origin}/auth/verify?url=${encodeURIComponent(actionLink)}`;
+                    
+                    // Upsert a profile for this new user
+                    if (newUser) {
+                      await supabaseAdmin.from("profiles").upsert({
+                        id: newUser.id,
+                        email: userEmail,
+                        full_name: "",
+                        role: "startup",
+                      });
+                      finalUserId = newUser.id;
+                    }
+                  } else {
+                    console.error("[Auto Magic Link Generation Error]:", linkErr);
+                  }
                 }
+              }
+            }
+
+            // 1.5 MERGE GUEST QUICKASSESS ANSWERS INTO USER'S CHECKLIST GATES
+            if (finalUserId && result.financial_snapshot) {
+              try {
+                const standardModules = [
+                  { id: "1-problem", title: "Problem & Hypothesis", field: "problem_description" },
+                  { id: "2-customer", title: "Customer Persona", field: "target_customer" },
+                  { id: "3-competitor", title: "Competitor Analysis", field: "unfair_advantage" },
+                  { id: "4-product", title: "Product Readiness", field: "product_stage" },
+                  { id: "5-market", title: "Market Opportunity", field: "market_size_description" },
+                  { id: "6-pmf", title: "Product‑Market Fit & Traction", field: "customer_acquisition" },
+                  { id: "7-revenue", title: "Revenue Model Explorer", field: "monthly_revenue_usd" },
+                  { id: "8-team", title: "Team Composition Audit", field: "team_size" }
+                ];
+
+                for (const mod of standardModules) {
+                  // Check if they already have answers in the DB
+                  const { data: existing } = await supabaseAdmin
+                    .from("audit_responses")
+                    .select("module_id")
+                    .eq("user_id", finalUserId)
+                    .eq("module_id", mod.id)
+                    .single();
+
+                  if (!existing) {
+                    // Pull option value and label
+                    let label = "";
+                    let val = 80;
+
+                    if (mod.id === "1-problem" && result.problem_description) {
+                      label = result.problem_description;
+                    } else if (mod.id === "2-customer" && result.target_customer) {
+                      label = result.target_customer;
+                    } else if (mod.id === "3-competitor") {
+                      label = `Competitors: ${Array.isArray(result.main_competitors) ? result.main_competitors.join(", ") : (result.main_competitors || "None")}. Unfair Advantage: ${result.unfair_advantage || "None"}`;
+                    } else if (mod.id === "4-product" && result.product_stage) {
+                      label = `Product Stage: ${result.product_stage}`;
+                    } else if (mod.id === "5-market" && result.market_size_description) {
+                      label = result.market_size_description;
+                    } else if (mod.id === "6-pmf" && result.customer_acquisition) {
+                      label = `Acquisition: ${result.customer_acquisition}`;
+                    } else if (mod.id === "7-revenue") {
+                      label = result.is_pre_revenue ? "Pre-revenue startup" : `Revenue: $${result.financial_snapshot?.monthly_revenue_usd || 0}/month`;
+                    } else if (mod.id === "8-team" && result.team_overview) {
+                      label = `Team Size: ${result.team_overview?.size || 1}. Domain Fit: ${result.team_overview?.domain_fit || "Standard"}`;
+                    }
+
+                    if (label) {
+                      const completedAnswer = {
+                        questionTitle: `QuickAssess: ${mod.title}`,
+                        selectedOptionId: "opt-quickassess",
+                        selectedOptionLabel: label,
+                        openText: label,
+                        scoreValue: val
+                      };
+
+                      await supabaseAdmin.from("audit_responses").upsert({
+                        user_id: finalUserId,
+                        module_id: mod.id,
+                        selected_option: "DYNAMIC_CHAIN",
+                        open_text: JSON.stringify({ answers: [completedAnswer] }),
+                        score_value: val,
+                        updated_at: new Date().toISOString()
+                      }, { onConflict: "user_id,module_id" });
+                    }
+                  }
+                }
+              } catch (mergeErr) {
+                console.error("[Guest Merge Fail]:", mergeErr);
               }
             }
 
@@ -180,14 +284,52 @@ export async function POST(req: NextRequest) {
             (async () => {
               try {
                 if (userEmail) {
-                  const { error: emailError } = await resend.emails.send({
-                    from: process.env.RESEND_FROM_EMAIL || "FundabilityOS <hello@nextblaze.asia>",
-                    to: userEmail,
-                    subject: `Your Fundability Score is ${score}/100`,
-                    react: DiagnosticCompleteEmail({ score, band: result.band, reportUrl }) as React.ReactElement,
-                  });
-                  if (emailError) console.error("[Resend Error]:", emailError);
-                  else console.log("[Resend] Email sent to:", userEmail);
+                  if (magicLinkCreated && magicLinkUrl) {
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || "hello@nextblaze.asia";
+                    const { error: emailError } = await resend.emails.send({
+                      from: `FundabilityOS <${fromEmail}>`,
+                      to: userEmail,
+                      subject: `Your Fundability Audit is Ready (Score: ${score}/100)`,
+                      html: `
+                        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #edf2f7; border-radius: 8px; background-color: #022f42; color: white;">
+                          <h1 style="color: #ffd800; font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">NextBlaze</h1>
+                          <p style="color: #b0d0e0; font-size: 16px; font-weight: bold; margin-bottom: 24px; text-transform: uppercase;">Your Fundability Assessment is Complete</p>
+                          
+                          <div style="background-color: rgba(255,255,255,0.05); padding: 24px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 28px;">
+                            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #ffd800;">Your Fundability Score</div>
+                            <div style="font-size: 64px; font-weight: 900; color: #ffd800; margin: 8px 0; font-family: monospace;">${score}<span style="font-size: 18px; opacity: 0.5;">/100</span></div>
+                            <div style="font-size: 14px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: 0.05em;">Band: ${result.band}</div>
+                          </div>
+
+                          <p style="color: #b0d0e0; font-size: 14px; line-height: 1.6; margin-bottom: 28px;">
+                            We have automatically created your account and loaded your answers into your interactive checklist. Click below to sign in and view your customized 30-Day Growth Plan and AI gaps analysis.
+                          </p>
+
+                          <a href="${magicLinkUrl}" style="display: inline-block; background-color: #ffd800; color: #022f42; font-size: 13px; font-weight: 900; text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; padding: 18px 36px; border-radius: 2px;">
+                            Access My Full Dashboard
+                          </a>
+
+                          <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 32px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+                            This magic link is protected and expires in 1 hour.
+                            <br />
+                            Link not working? Paste this into your browser: <br />
+                            <span style="word-break: break-all; color: #ffd800;">${magicLinkUrl}</span>
+                          </p>
+                        </div>
+                      `
+                    });
+                    if (emailError) console.error("[Resend Error]:", emailError);
+                    else console.log("[Resend] Guest Magic Link email sent to:", userEmail);
+                  } else {
+                    const { error: emailError } = await resend.emails.send({
+                      from: process.env.RESEND_FROM_EMAIL || "hello@nextblaze.asia",
+                      to: userEmail,
+                      subject: `Your Fundability Score is ${score}/100`,
+                      react: DiagnosticCompleteEmail({ score, band: result.band, reportUrl }) as React.ReactElement,
+                    });
+                    if (emailError) console.error("[Resend Error]:", emailError);
+                    else console.log("[Resend] Standard email sent to:", userEmail);
+                  }
                 } else {
                   console.warn("[Resend] No userEmail provided, skipping email.");
                 }

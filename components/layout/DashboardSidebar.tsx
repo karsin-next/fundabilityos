@@ -4,435 +4,274 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Zap, PieChart, Map, FileText, BarChart3,
-  CheckSquare, FolderOpen, ShieldCheck, Eye, Target, Settings,
-  Calculator, Activity, Users,
-  ChevronRight, User, Lightbulb, Swords, Package, Globe, TrendingUp, DollarSign, HeartHandshake,
-  LineChart, LayoutDashboard, Layers, AlertTriangle, Search, Wallet, Edit, Tally3, Flame,
+  Zap, PieChart, FileText, BarChart3,
+  ShieldCheck, Eye, Target, Settings,
+  Activity, Users, ChevronRight, User, Lightbulb, Swords, Package, Globe, TrendingUp, DollarSign, HeartHandshake,
+  LayoutDashboard, AlertTriangle, Search, Wallet, Edit, Tally3, Flame,
   Percent, RefreshCw, Infinity, ArrowDownToLine, Clock, Folders, ListChecks, Lock, Wrench, Bot,
-  UserPlus, FileSearch, Briefcase, Copyleft, MessageSquare, ShieldAlert, BookOpen
+  UserPlus, FileSearch, Briefcase, Copyleft, MessageSquare, ShieldAlert, BookOpen, X, CheckCircle2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser } from "@/lib/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: any;
-  children?: NavItem[];
-  isLocked?: boolean;
-}
-
-interface NavSection {
-  label: string;
-  items: NavItem[];
-  isLocked?: boolean;
-}
-
-// Full sitemap tree structure from Table 1 Methodology
-const siteMap: NavSection[] = [
-  {
-    label: "1. DIAGNOSE – Establish Baseline",
-    items: [
-      {
-        name: "1.1 360°  Fundability Audit Overview",
-        href: "/dashboard",
-        icon: Zap,
-        children: [
-          { name: "1.1.1 Problem & Hypothesis", href: "/dashboard/audit/1-problem", icon: Lightbulb },
-          { name: "1.1.2 Customer Persona", href: "/dashboard/audit/2-customer", icon: User },
-          { name: "1.1.3 Competitor Analysis", href: "/dashboard/audit/3-competitor", icon: Swords },
-          { name: "1.1.4 Product Readiness", href: "/dashboard/audit/4-product", icon: Package },
-          { name: "1.1.5 Market Opportunity", href: "/dashboard/audit/5-market", icon: Globe },
-          { name: "1.1.6 Product‑Market Fit & Traction", href: "/dashboard/audit/6-pmf", icon: TrendingUp },
-          { name: "1.1.7 Revenue Model Explorer", href: "/dashboard/audit/7-revenue", icon: DollarSign },
-          { name: "1.1.8 Team Composition Audit", href: "/dashboard/audit/8-team", icon: HeartHandshake },
-          { name: "1.1.9 Financial Snapshot", href: "/dashboard/audit/9-financial-snapshot", icon: DollarSign },
-          { name: "1.1.10 Fundraising Ask", href: "/dashboard/audit/10-fundraising-ask", icon: PieChart },
-        ],
-      },
-      {
-        name: "1.2 Live Fundability Score",
-        href: "/dashboard/score/overview",
-        icon: Target,
-        children: [
-          { name: "1.2.1 Fundability Score", href: "/dashboard/score/overview", icon: Activity },
-          { name: "1.2.2 Key Criteria Breakdown", href: "/dashboard/score/breakdown", icon: Layers },
-          { name: "1.2.3 Benchmark Comparison", href: "/dashboard/score/benchmark", icon: BarChart3 },
-          { name: "1.2.4 Score History", href: "/dashboard/score/history", icon: LineChart },
-        ],
-      },
-      {
-        name: "1.3 Gap Analysis Report",
-        href: "/dashboard/gap-report/overview",
-        icon: BarChart3,
-        children: [
-          { name: "1.3.1 Gap Analysis Report", href: "/dashboard/gap-report/overview", icon: FileText },
-          { name: "1.3.2 Growth Benchmarks", href: "/insights", icon: BookOpen },
-          { name: "1.3.3 Priority Gaps", href: "/dashboard/gap-report/top-3", icon: AlertTriangle },
-          { name: "1.3.4 Gap Mitigation", href: "/dashboard/gap-report/mitigation", icon: Edit },
-          { name: "1.3.5 Investor Report", href: "/dashboard/gap-report/report", icon: FileSearch },
-        ],
-      },
-    ],
-  },
-  {
-    label: "2. ACTIVATE – Financial Foundation",
-    items: [
-      {
-        name: "2.1 Manual Financial Input",
-        href: "/dashboard/financials",
-        icon: Calculator,
-        children: [
-          { name: "2.1.1 Key Metrics Entry", href: "/dashboard/financials/metrics", icon: Edit },
-          { name: "2.1.2 EBDAT Breakeven", href: "/dashboard/financials/breakeven", icon: Tally3 },
-          { name: "2.1.3 Cash Flow Snapshot", href: "/dashboard/financials/cash-flow", icon: Wallet },
-        ],
-      },
-      {
-        name: "2.2 Investor Dashboard",
-        href: "#",
-        icon: LayoutDashboard,
-        children: [
-          { name: "2.2.1 Runway & Burn", href: "/dashboard/metrics/runway", icon: Flame },
-          { name: "2.2.2 Revenue & Growth", href: "/dashboard/metrics/revenue", icon: TrendingUp },
-          { name: "2.2.3 Expense Breakdown", href: "/dashboard/metrics/expenses", icon: PieChart },
-        ],
-      },
-      {
-        name: "2.3 Unit Economics",
-        href: "#",
-        icon: LineChart,
-        children: [
-          { name: "2.3.1 CAC Calculator", href: "/dashboard/unit-economics/cac", icon: Users },
-          { name: "2.3.2 LTV Estimator", href: "/dashboard/unit-economics/ltv", icon: Infinity },
-          { name: "2.3.3 Gross Margin", href: "/dashboard/unit-economics/margin", icon: Percent },
-          { name: "2.3.4 Cash Conversion Cycle", href: "/dashboard/unit-economics/ccc", icon: RefreshCw },
-          { name: "2.3.5 Investor Report", href: "/dashboard/unit-economics/report", icon: LayoutDashboard },
-        ],
-      },
-      {
-        name: "2.4 Fundraising Strategy Canvas",
-        href: "#",
-        icon: Map,
-        children: [
-          { name: "2.4.1 WHAT: Capital Needs", href: "/dashboard/strategy/what", icon: DollarSign },
-          { name: "2.4.2 WHY: Use of Funds", href: "/dashboard/strategy/why", icon: PieChart },
-          { name: "2.4.3 WHEN: Timing & Runway", href: "/dashboard/strategy/when", icon: Clock },
-          { name: "2.4.4 HOW: Cash Flow Projection", href: "/dashboard/strategy/how", icon: LineChart },
-          { name: "2.4.5 WHO: Investor Matching", href: "/dashboard/strategy/who", icon: Users },
-          { name: "2.4.6 Fundraising Roadmap", href: "/dashboard/strategy/roadmap", icon: Map },
-        ],
-      },
-      {
-        name: "2.5 Data Room Builder",
-        href: "#",
-        icon: FolderOpen,
-        children: [
-          { name: "2.5.1 Structure Template", href: "/dashboard/data-room/structure", icon: Folders },
-          { name: "2.5.2 Document Checklist", href: "/dashboard/data-room/checklist", icon: ListChecks },
-          { name: "2.5.3 Investor Access Simulator", href: "/dashboard/data-room/simulator", icon: Lock },
-          { name: "2.5.4 Readiness Score", href: "/dashboard/data-room/score", icon: ShieldCheck },
-          { name: "2.5.5 Data Room Builder", href: "/dashboard/data-room/builder", icon: FolderOpen },
-        ],
-      },
-    ],
-  },
-  {
-    label: "3. ACCELERATE – Closing Gaps",
-    items: [
-      {
-        name: "3.1 Gap Closure Workbench",
-        href: "#",
-        icon: Activity,
-        children: [
-          { name: "3.1.1 Personalised Action Plan", href: "/dashboard/workbench/plan", icon: CheckSquare },
-          { name: "3.1.2 Tool Library", href: "/dashboard/workbench/tools", icon: Wrench },
-          { name: "3.1.3 AI Coach Assistant", href: "/dashboard/workbench/coach", icon: Bot },
-        ],
-      },
-      {
-        name: "3.2 Investor Targeting",
-        href: "/dashboard/investors",
-        icon: Target,
-        children: [
-          { name: "3.2.1 Investor Profile Builder", href: "/dashboard/investors/profile", icon: UserPlus },
-          { name: "3.2.2 Portfolio & Competitor Check", href: "/dashboard/investors/portfolio", icon: Search },
-        ],
-      },
-      {
-        name: "3.3 Visibility & Verification",
-        href: "#",
-        icon: Eye,
-        children: [
-          { name: "3.3.1 Profile Visibility", href: "/dashboard/visibility/toggle", icon: Eye },
-          { name: "3.3.2 FundabilityOS Verified Badge", href: "/dashboard/verification", icon: ShieldCheck },
-        ],
-      },
-    ],
-  },
-  {
-    label: "4. MASTER – Advanced Topics",
-    items: [
-      {
-        name: "4.1 Term Sheet Mastery",
-        href: "#",
-        icon: FileSearch,
-        children: [
-          { name: "4.1.1 Term Sheet Anatomy", href: "/dashboard/term-sheet/anatomy", icon: FileText },
-          { name: "4.1.2 Valuation Simulator", href: "/dashboard/term-sheet/valuation", icon: Calculator },
-          { name: "4.1.3 Liquidation Preference Simulator", href: "/dashboard/term-sheet/liquidation", icon: ArrowDownToLine },
-          { name: "4.1.4 Anti‑Dilution Comparison", href: "/dashboard/term-sheet/anti-dilution", icon: ShieldAlert },
-        ],
-      },
-      {
-        name: "4.2 Due Diligence Simulator",
-        href: "#",
-        icon: Search,
-        children: [
-          { name: "4.2.1 Legal DD Checklist", href: "/dashboard/dd-simulator/legal", icon: Briefcase },
-          { name: "4.2.2 Financial DD Prep", href: "/dashboard/dd-simulator/financial", icon: PieChart },
-          { name: "4.2.3 IP Audit Tool", href: "/dashboard/dd-simulator/ip", icon: Copyleft },
-          { name: "4.2.4 Mock Q & A", href: "/dashboard/dd-simulator/qa", icon: MessageSquare },
-        ],
-      },
-      {
-        name: "4.3 Negotiation Playbook",
-        href: "#",
-        icon: FileText,
-        children: [
-          { name: "4.3.1 Deal-Breaker Builder", href: "/dashboard/negotiation/deal-breakers", icon: CheckSquare },
-          { name: "4.3.2 Exit Value Distribution", href: "/dashboard/negotiation/exit-value", icon: PieChart },
-          { name: "4.3.3 Red Flag Identifier", href: "/dashboard/negotiation/red-flags", icon: ShieldAlert },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Education",
-    items: [
-      { 
-        name: "Fundability Academy", 
-        href: "/academy", 
-        icon: BookOpen,
-        children: [
-          { name: "SaaS Valuation", href: "/academy/saas-valuation-benchmarks-2026", icon: FileText },
-          { name: "CAC Payback Gap", href: "/academy/cac-payback-gap-mitigation", icon: FileText },
-          { name: "Investor Matching", href: "/academy/investor-matching-algorithms", icon: FileText },
-        ]
-      },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { name: "Company Settings", href: "/dashboard/settings", icon: Settings },
-    ],
-  },
+// Clean, simplified gate data representing the 10 due diligence gates
+const dueDiligenceGates = [
+  { id: "1-problem", name: "1.1.1 Problem & Hypothesis", href: "/dashboard/audit/1-problem", icon: Lightbulb },
+  { id: "2-customer", name: "1.1.2 Customer Persona", href: "/dashboard/audit/2-customer", icon: User },
+  { id: "3-competitor", name: "1.1.3 Competitor Analysis", href: "/dashboard/audit/3-competitor", icon: Swords },
+  { id: "4-product", name: "1.1.4 Product Readiness", href: "/dashboard/audit/4-product", icon: Package },
+  { id: "5-market", name: "1.1.5 Market Opportunity", href: "/dashboard/audit/5-market", icon: Globe },
+  { id: "6-pmf", name: "1.1.6 Product‑Market Fit", href: "/dashboard/audit/6-pmf", icon: TrendingUp },
+  { id: "7-revenue", name: "1.1.7 Revenue Model Explorer", href: "/dashboard/audit/7-revenue", icon: DollarSign },
+  { id: "8-team", name: "1.1.8 Team Composition Audit", href: "/dashboard/audit/8-team", icon: HeartHandshake },
+  { id: "9-financial-snapshot", name: "1.1.9 Financial Snapshot", href: "/dashboard/audit/9-financial-snapshot", icon: DollarSign },
+  { id: "10-fundraising-ask", name: "1.1.10 Fundraising Ask", href: "/dashboard/audit/10-fundraising-ask", icon: PieChart },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { user, signOut } = useUser();
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
+  const [isDataRoomModalOpen, setIsDataRoomModalOpen] = useState(false);
+  const supabase = createClient();
 
-  const isActive = (href: string) => pathname === href && href !== "#";
-  const isAnyChildActive = (children?: { href: string }[]) =>
-    children?.some(c => pathname === c.href) ?? false;
+  const isActive = (href: string) => pathname === href;
 
-  // Set initial expanded section based on pathname
+  // Query database for completed modules to feed the progress ring and checkmarks
   useEffect(() => {
-    const activeSection = siteMap.find(section => 
-      section.items.some(item => 
-        isActive(item.href) || isAnyChildActive(item.children)
-      )
-    );
-    if (activeSection) {
-      setExpandedSection(activeSection.label);
+    async function fetchProgress() {
+      if (!user?.id) return;
+      try {
+        const { data } = await supabase
+          .from("audit_responses")
+          .select("module_id")
+          .eq("user_id", user.id);
+        
+        if (data) {
+          setCompletedModules(new Set(data.map((r: any) => r.module_id)));
+        }
+      } catch (err) {
+        console.error("Error fetching progress for sidebar:", err);
+      }
     }
-  }, [pathname]);
 
-  const toggleSection = (label: string) => {
-    setExpandedSection(prev => prev === label ? null : label);
-  };
-  
-  const toggleItem = (name: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpandedItems(prev => ({ ...prev, [name]: !prev[name] }));
-  };
+    fetchProgress();
+
+    // Listen to changes in window state or interval to keep sidebar checkmarks dynamic
+    const interval = setInterval(fetchProgress, 3000);
+    return () => clearInterval(interval);
+  }, [user, supabase]);
+
+  const completedCount = completedModules.size;
+  const percentage = Math.round((completedCount / 10) * 100);
+
+  // SVG Progress Ring calculations
+  const radius = 22;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <aside className="w-64 bg-[#022f42] border-r border-[#1b4f68] hidden md:flex flex-col flex-shrink-0 overflow-y-auto min-h-screen sticky top-0">
-      <div className="py-5">
-        {/* User Identity Box */}
-        <div className="px-4 mb-5">
-           <div className="bg-white/5 border border-[#1b4f68] p-4 rounded-sm shadow-inner">
-              <div className="w-8 h-8 bg-[#ffd800] text-[#022f42] rounded-sm font-black flex items-center justify-center text-lg mb-3 shadow-sm">
-                {(user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || "S").toUpperCase()}
-              </div>
-              <h2 className="text-sm font-bold text-white leading-tight truncate">
-                {user?.user_metadata?.full_name || "FundabilityOS User"}
-              </h2>
-              <p className="text-[10px] text-[#b0d0e0] font-medium mt-0.5 truncate">
-                Founder
-              </p>
-              {user?.email && (
-                <p className="text-[9px] text-white/70 truncate leading-tight mt-2 bg-black/20 px-1.5 py-0.5 rounded-sm">
-                  {user.email}
-                </p>
-              )}
-           </div>
-        </div>
-
-        {/* Full Sitemap Navigation */}
-        <nav className="space-y-4">
-          {siteMap.map((section) => {
-            const isExpanded = expandedSection === section.label;
-            
-            return (
-              <div key={section.label}>
-                {/* Section header */}
-                <Link 
-                  href={section.items[0]?.href || "#"} 
-                  onClick={(e) => {
-                    if (section.isLocked) {
-                      e.preventDefault();
-                      return;
-                    }
-                    toggleSection(section.label);
-                  }}
-                  className={`w-full px-2.5 mb-1 flex items-center justify-between group ${
-                    section.isLocked ? "cursor-not-allowed opacity-50" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {section.isLocked && <Lock className="w-3 h-3 text-[#b0d0e0] opacity-50" />}
-                    <h3 className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
-                      isExpanded 
-                        ? "text-[#ffd800]" 
-                        : section.isLocked 
-                          ? "text-[#b0d0e0]/40" 
-                          : "text-[#b0d0e0]/60 group-hover:text-[#b0d0e0]"
-                    }`}>
-                      {section.label} {section.isLocked && <span className="text-[#ffd800]/70 ml-1 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">PRO</span>}
-                    </h3>
-                  </div>
-                  {!section.isLocked && (
-                    <ChevronRight className={`w-3 h-3 text-[#b0d0e0]/30 transition-transform duration-300 ${isExpanded ? "rotate-90 text-[#ffd800]" : ""}`} />
-                  )}
-                </Link>
-
-                {/* Sub-menu with Tailwind Transition */}
-                <div 
-                  className={`px-2 space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${
-                    isExpanded ? "max-h-[1000px] opacity-100 mt-2" : "max-h-0 opacity-0 pointer-events-none"
-                  }`}
-                >
-                  {section.items.map((item) => {
-                    const active = isActive(item.href);
-                    const childActive = isAnyChildActive(item.children);
-                    const isItemExpanded = active || childActive || expandedItems[item.name];
-
-                    return (
-                      <div key={item.name}>
-                        {/* Top-level item */}
-                        <Link
-                          href={item.href}
-                          onClick={(e) => {
-                            if (item.href === "#" || item.children) {
-                              toggleItem(item.name, e);
-                              // Only prevent default if it's a dead link
-                              // If it has a real href, we toggle AND navigate.
-                              if (item.href === "#") {
-                                e.preventDefault();
-                              }
-                            }
-                          }}
-                          className={`flex items-center justify-between px-2.5 py-2 rounded-sm transition-colors text-[12px] group ${
-                            active
-                              ? "bg-[#1b4f68] text-[#ffd800] font-black"
-                              : childActive
-                              ? "text-white font-semibold"
-                              : "text-white/60 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <item.icon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-[#ffd800]" : childActive ? "text-white/80" : "text-white/40 group-hover:text-white/60"}`} />
-                            <span className={`truncate ${active ? "text-[#ffd800] font-black" : ""}`}>{item.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            {item.isLocked && (
-                              <span className="text-[7px] font-black uppercase tracking-widest text-[#ffd800]/50 bg-[#ffd800]/10 px-1 py-0.5 rounded-sm">Soon</span>
-                            )}
-                            {item.children && (
-                              <button 
-                                onClick={(e) => toggleItem(item.name, e)}
-                                className="p-0.5 hover:bg-white/10 rounded-sm transition-colors"
-                              >
-                                <ChevronRight className={`w-3 h-3 transition-transform ${isItemExpanded ? "rotate-90 text-[#ffd800]" : "text-white/30"}`} />
-                              </button>
-                            )}
-                          </div>
-                        </Link>
-
-                        {/* Sub-items (level 2) */}
-                        {item.children && (
-                          <div 
-                            className={`ml-3 mt-1 mb-2 border-l border-[#1b4f68]/60 pl-2 space-y-0.5 overflow-hidden transition-all duration-200 ${
-                              isItemExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 pointer-events-none !mt-0 !mb-0"
-                            }`}
-                          >
-                            {item.children.map((child: NavItem) => {
-                              const childIsActive = isActive(child.href);
-                              return (
-                                <Link
-                                  key={child.href}
-                                  href={child.href}
-                                  className={`flex items-center gap-2 px-2 py-1.5 rounded-sm transition-colors text-[11px] ${
-                                    childIsActive
-                                      ? "bg-[#1b4f68] text-[#ffd800] font-black"
-                                      : "text-white/50 hover:text-white hover:bg-white/5"
-                                  }`}
-                                >
-                                  <child.icon className={`w-3.5 h-3.5 shrink-0 ${childIsActive ? "text-[#ffd800]" : "text-white/30"}`} />
-                                  <span className={childIsActive ? "text-[#ffd800] font-black" : ""}>{child.name}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </nav>
+    <aside className="w-64 bg-[#022f42] border-r border-[#1b4f68] hidden md:flex flex-col flex-shrink-0 min-h-screen sticky top-0 z-40 select-none">
+      
+      {/* ─── LOGO & BRANDING ─────────────────────────────────────────────────── */}
+      <div className="px-6 pt-6 pb-4 border-b border-[#1b4f68]/40">
+        <Link href="/dashboard" className="flex items-center gap-2.5 group">
+          <div className="w-7 h-7 bg-[#ffd800] flex items-center justify-center rounded-sm transition-all group-hover:scale-105">
+            <Zap className="text-[#022f42] fill-[#022f42]" size={15} />
+          </div>
+          <span className="text-white font-black text-sm uppercase tracking-[0.2em]">FundabilityOS</span>
+        </Link>
       </div>
 
-      <div className="mt-auto p-4 border-t border-[#1b4f68]/50 space-y-2">
-        {/* Support Us Button */}
-        <Link 
-          href="/donate"
-          className="w-full bg-[#ffd800] hover:bg-[#ffd800]/90 text-[#022f42] transition-colors rounded-sm py-2.5 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md"
-        >
-          <HeartHandshake className="w-4 h-4" /> Support Us
-        </Link>
+      {/* ─── DYNAMIC PROGRESS BLOCK ──────────────────────────────────────────── */}
+      <div className="p-4 mx-4 my-4 bg-white/3 border border-[#1b4f68]/50 rounded-sm shadow-inner flex items-center gap-4">
+        <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90">
+            {/* Background circle */}
+            <circle
+              cx="28"
+              cy="28"
+              r={radius}
+              fill="transparent"
+              stroke="rgba(255, 255, 255, 0.05)"
+              strokeWidth="4"
+            />
+            {/* Foreground progress circle */}
+            <circle
+              cx="28"
+              cy="28"
+              r={radius}
+              fill="transparent"
+              stroke="#ffd800"
+              strokeWidth="4"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="transition-all duration-700 ease-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xs font-black text-white">{completedCount}</span>
+            <span className="text-[7px] font-bold text-[#b0d0e0]/50 uppercase">/ 10</span>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-[9px] font-black uppercase tracking-widest text-[#ffd800]">Platform Readiness</h4>
+          <p className="text-[10px] text-white/70 font-bold uppercase mt-0.5">{percentage}% Completed</p>
+          <p className="text-[8px] text-[#b0d0e0]/40 font-medium uppercase mt-0.5">{10 - completedCount} gates left</p>
+        </div>
+      </div>
+
+      {/* ─── NAVIGATION SCROLL AREA ─────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6">
         
-        {/* Logout Button */}
-        <button 
+        {/* SECTION 1: CORE GATES */}
+        <div className="space-y-1">
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-sm transition-all text-xs font-black uppercase tracking-wider mb-2 ${
+              isActive("/dashboard")
+                ? "bg-[#1b4f68] text-[#ffd800]"
+                : "text-white/80 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <LayoutDashboard size={14} className={isActive("/dashboard") ? "text-[#ffd800]" : "text-white/40"} />
+            Dashboard Overview
+          </Link>
+
+          <div className="pl-2 border-l border-[#1b4f68]/40 ml-1.5 space-y-0.5">
+            {dueDiligenceGates.map((gate) => {
+              const active = isActive(gate.href);
+              const completed = completedModules.has(gate.id);
+              return (
+                <Link
+                  key={gate.id}
+                  href={gate.href}
+                  className={`flex items-center justify-between px-3 py-1.5 rounded-sm transition-all text-[11px] group ${
+                    active
+                      ? "bg-[#1b4f68]/80 text-[#ffd800] font-black"
+                      : "text-white/60 hover:text-white hover:bg-white/3"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <gate.icon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-[#ffd800]" : "text-white/30 group-hover:text-white/60"}`} />
+                    <span className="truncate">{gate.name}</span>
+                  </div>
+                  {completed && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SEPARATOR */}
+        <div className="border-t border-[#1b4f68]/30 my-2" />
+
+        {/* SECTION 2: REPORTS */}
+        <div className="space-y-1">
+          <span className="px-3 text-[9px] font-black text-[#b0d0e0]/40 uppercase tracking-widest block mb-1">Reports</span>
+          <Link
+            href="/dashboard/report"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-sm transition-all text-xs font-black uppercase tracking-wider ${
+              isActive("/dashboard/report")
+                ? "bg-[#1b4f68] text-[#ffd800]"
+                : "text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <FileText size={14} className={isActive("/dashboard/report") ? "text-[#ffd800]" : "text-white/30"} />
+            Generate & View Reports
+          </Link>
+        </div>
+
+        {/* SEPARATOR */}
+        <div className="border-t border-[#1b4f68]/30 my-2" />
+
+        {/* SECTION 3: PREMIUM TOOLS */}
+        <div className="space-y-1">
+          <button
+            onClick={() => setIsDataRoomModalOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-sm transition-all text-xs font-black uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/5 text-left group"
+          >
+            <div className="flex items-center gap-2.5">
+              <Lock size={14} className="text-[#ffd800]" />
+              <span className="text-[#ffd800]">Data Room Accelerator</span>
+            </div>
+            <span className="text-[8px] font-black bg-[#ffd800]/10 text-[#ffd800] px-1 py-0.5 rounded-sm shrink-0">🔒 PRO</span>
+          </button>
+        </div>
+
+      </div>
+
+      {/* ─── SIDEBAR FOOTER (SETTINGS & LOGOUT) ──────────────────────────────── */}
+      <div className="p-4 border-t border-[#1b4f68]/40 space-y-2 mt-auto bg-black/10">
+        
+        {/* Support & Settings Links */}
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href="/dashboard/settings"
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors rounded-sm flex-1 ${
+              isActive("/dashboard/settings")
+                ? "bg-[#1b4f68] text-[#ffd800]"
+                : "text-white/50 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Settings size={13} />
+            Settings
+          </Link>
+        </div>
+
+        {/* Logout Secure Session */}
+        <button
           onClick={async () => {
             await signOut();
-            window.location.href = '/login';
-          }} 
-          className="w-full bg-[#1b4f68]/20 hover:bg-red-500/10 hover:text-red-400 text-white/50 transition-colors border border-white/5 rounded-sm py-2.5 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest"
+            window.location.href = "/login";
+          }}
+          className="w-full bg-[#1b4f68]/20 hover:bg-red-500/10 hover:text-red-400 text-white/50 transition-colors border border-white/5 rounded-sm py-2 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest"
         >
           Logout Secure Session
         </button>
       </div>
+
+      {/* ─── DATA ROOM PRO MODAL OVERLAY ──────────────────────────────────────── */}
+      {isDataRoomModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#022f42]/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[#022f42] border-2 border-[#1b4f68] w-full max-w-md relative p-8 shadow-2xl text-center">
+            
+            <button
+              onClick={() => setIsDataRoomModalOpen(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white p-1 hover:bg-white/5 transition-all"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-14 h-14 bg-[#ffd800]/10 border-2 border-[#ffd800] rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock size={24} className="text-[#ffd800]" />
+            </div>
+
+            <h3 className="text-lg font-black text-white uppercase tracking-wider mb-2">
+              Data Room Accelerator 🔒
+            </h3>
+            
+            <p className="text-[10px] font-black text-[#ffd800] uppercase tracking-widest mb-4">
+              Premium Feature — Coming Soon
+            </p>
+
+            <p className="text-xs text-[#b0d0e0] leading-relaxed mb-6 uppercase tracking-tight">
+              Securely compile, clean, and organize all corporate documents, customer contracts, and IP registries in one centralized VC-ready data room, fully verified by the FundabilityOS smart-engine.
+            </p>
+
+            <button
+              onClick={() => setIsDataRoomModalOpen(false)}
+              className="w-full bg-[#ffd800] hover:bg-[#ffd800]/90 text-[#022f42] transition-colors rounded-sm py-3 text-xs font-black uppercase tracking-widest"
+            >
+              Close Preview
+            </button>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

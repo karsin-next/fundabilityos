@@ -211,7 +211,7 @@ export default async function ReportPage({ params }: PageProps) {
                    <UnlockButton reportId={reportData.id} />
                 </div>
                 <p style={{ fontSize: "0.75rem", color: "rgba(2,47,66,0.4)", marginTop: "1.5rem", fontWeight: 600 }}>
-                  ONE-TIME PAYMENT OF $29. SECURED BY STRIPE.
+                  ONE-TIME PAYMENT OF $9. SECURED BY STRIPE.
                 </p>
               </div>
             )}

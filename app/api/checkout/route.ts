@@ -23,7 +23,7 @@ export async function POST(req: Request) {
               description: "Complete PDF, Private Share Link, and 30-Day Growth Plan.",
               images: [`${appUrl}/assets/og-image.png`], // Optional branding
             },
-            unit_amount: 2900, // $29.00
+            unit_amount: 900, // $9.00
           },
           quantity: 1,
         },
